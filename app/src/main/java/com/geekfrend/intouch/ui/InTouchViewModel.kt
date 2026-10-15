@@ -26,6 +26,7 @@ import com.geekfrend.intouch.data.PendingCall
 import com.geekfrend.intouch.data.TrackedContact
 import com.geekfrend.intouch.device.CallLauncher
 import com.geekfrend.intouch.device.ContactsReader
+import com.geekfrend.intouch.device.PhoneOption
 import com.geekfrend.intouch.device.PickedContact
 import com.geekfrend.intouch.domain.PhoneNumbers
 import com.geekfrend.intouch.ui.dialogs.LogDraft
@@ -164,7 +165,7 @@ class InTouchViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    suspend fun numbersFor(c: TrackedContact): List<String> = withContext(Dispatchers.IO) { repo.numbersFor(c) }
+    suspend fun numbersFor(c: TrackedContact): List<PhoneOption> = withContext(Dispatchers.IO) { repo.numbersFor(c) }
 
     fun sameNumber(a: String, b: String): Boolean = PhoneNumbers.same(a, b, prefs.region)
 

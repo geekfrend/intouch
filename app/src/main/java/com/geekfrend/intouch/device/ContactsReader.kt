@@ -7,13 +7,16 @@ import android.provider.ContactsContract.CommonDataKinds.Phone
 import android.provider.ContactsContract.Contacts
 import android.provider.ContactsContract.Data
 
+/** One of a contact's phone numbers, with its address-book label (Mobile, Work, Home or a custom one). */
+data class PhoneOption(val number: String, val label: String?)
+
 /** A contact chosen in the system contact picker. */
 data class PickedContact(
     val contactId: Long,
     val lookupKey: String?,
     val name: String,
     val photoUri: String?,
-    val numbers: List<String>,
+    val numbers: List<PhoneOption>,
     val hasWhatsApp: Boolean,
 )
 
@@ -41,20 +44,32 @@ object ContactsReader {
         )
     }
 
-    fun numbers(context: Context, contactId: Long): List<String> {
-        val out = mutableListOf<String>()
+    /** The contact's numbers with their labels, as the phone's Contacts app shows them. */
+    fun numbers(context: Context, contactId: Long): List<PhoneOption> {
+        val out = mutableListOf<PhoneOption>()
         try {
             context.contentResolver.query(
                 Phone.CONTENT_URI,
-                arrayOf(Phone.NUMBER),
+                arrayOf(Phone.NUMBER, Phone.TYPE, Phone.LABEL),
                 "${Phone.CONTACT_ID} = ?",
                 arrayOf(contactId.toString()),
                 null,
-            )?.use { c -> while (c.moveToNext()) c.getString(0)?.let { out.add(it) } }
+            )?.use { c ->
+                while (c.moveToNext()) {
+                    val number = c.getString(0) ?: continue
+                    val type = if (c.isNull(1)) null else c.getInt(1)
+                    val custom = c.getString(2)
+                    val label = when {
+                        type == null -> custom
+                        else -> Phone.getTypeLabel(context.resources, type, custom)?.toString()
+                    }
+                    out.add(PhoneOption(number, label?.takeIf { it.isNotBlank() }))
+                }
+            }
         } catch (e: SecurityException) {
             return emptyList()
         }
-        return out.distinctBy { n -> n.filter { it.isDigit() }.takeLast(10) }
+        return out.distinctBy { o -> o.number.filter { it.isDigit() }.takeLast(10) }
     }
 
     /** Finds the contact again by lookup key (or ID). Null when it was deleted from the address book. */

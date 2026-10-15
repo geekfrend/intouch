@@ -8,6 +8,7 @@ import androidx.core.content.ContextCompat
 import androidx.room.withTransaction
 import com.geekfrend.intouch.device.CallLogReader
 import com.geekfrend.intouch.device.ContactsReader
+import com.geekfrend.intouch.device.PhoneOption
 import com.geekfrend.intouch.device.PickedContact
 import com.geekfrend.intouch.domain.ContactStats
 import com.geekfrend.intouch.domain.ContactStatus
@@ -148,8 +149,8 @@ class Repository(
     suspend fun relink(id: String, p: PickedContact) = withContext(Dispatchers.IO) {
         val c = contacts.get(id) ?: return@withContext
         val region = prefs.region
-        val keepNumber = p.numbers.any { PhoneNumbers.same(it, c.phoneNumber, region) }
-        val number = if (keepNumber || p.numbers.isEmpty()) c.phoneNumber else PhoneNumbers.normalize(p.numbers.first(), region)
+        val keepNumber = p.numbers.any { PhoneNumbers.same(it.number, c.phoneNumber, region) }
+        val number = if (keepNumber || p.numbers.isEmpty()) c.phoneNumber else PhoneNumbers.normalize(p.numbers.first().number, region)
         contacts.upsert(
             c.copy(
                 lookupKey = p.lookupKey,
@@ -192,7 +193,7 @@ class Repository(
         }
     }
 
-    fun numbersFor(c: TrackedContact): List<String> =
+    fun numbersFor(c: TrackedContact): List<PhoneOption> =
         c.systemContactId?.let { ContactsReader.numbers(context, it) }.orEmpty()
 
     // ---- Call log entries ----------------------------------------------------------------------

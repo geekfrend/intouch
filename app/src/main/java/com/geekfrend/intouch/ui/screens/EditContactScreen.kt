@@ -40,6 +40,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import com.geekfrend.intouch.R
 import com.geekfrend.intouch.data.Channel
+import com.geekfrend.intouch.device.PhoneOption
 import com.geekfrend.intouch.ui.Format
 import com.geekfrend.intouch.ui.components.Avatar
 import com.geekfrend.intouch.ui.theme.InTouchTheme
@@ -53,7 +54,7 @@ fun EditContactScreen(
     title: String,
     name: String,
     photoUri: String?,
-    numbers: List<String>,
+    numbers: List<PhoneOption>,
     initialNumber: String,
     initialFrequency: Int,
     initialChannel: Channel,
@@ -97,13 +98,18 @@ fun EditContactScreen(
             }
 
             Text(stringResource(R.string.edit_number), style = MaterialTheme.typography.titleSmall)
-            numbers.forEach { n ->
+            numbers.forEach { option ->
                 Row(
-                    modifier = Modifier.fillMaxWidth().clickable { number = n },
+                    modifier = Modifier.fillMaxWidth().clickable { number = option.number },
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    RadioButton(selected = number == n, onClick = { number = n })
-                    Text(n)
+                    RadioButton(selected = number == option.number, onClick = { number = option.number })
+                    Column {
+                        Text(option.number, style = MaterialTheme.typography.bodyLarge)
+                        option.label?.let {
+                            Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
                 }
             }
 

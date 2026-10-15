@@ -36,6 +36,7 @@ import com.geekfrend.intouch.data.Channel
 import com.geekfrend.intouch.data.Direction
 import com.geekfrend.intouch.data.Interaction
 import com.geekfrend.intouch.data.Outcome
+import com.geekfrend.intouch.device.PhoneOption
 import com.geekfrend.intouch.ui.dialogs.ConfirmDialog
 import com.geekfrend.intouch.ui.dialogs.EntryActionsDialog
 import com.geekfrend.intouch.ui.dialogs.LogCallDialog
@@ -304,7 +305,7 @@ private fun AddRoute(vm: InTouchViewModel, nav: NavHostController) {
         name = p.name,
         photoUri = p.photoUri,
         numbers = p.numbers,
-        initialNumber = p.numbers.first(),
+        initialNumber = p.numbers.first().number,
         initialFrequency = 14,
         initialChannel = if (p.hasWhatsApp) Channel.WHATSAPP else Channel.PHONE,
         saveLabel = stringResource(R.string.add_save),
@@ -323,16 +324,16 @@ private fun EditRoute(vm: InTouchViewModel, id: String, onDone: () -> Unit) {
     val detailFlow = remember(id) { vm.detail(id) }
     val detail by detailFlow.collectAsStateWithLifecycle(initialValue = null)
     val c = detail?.contact ?: return
-    val numbers by produceState<List<String>?>(initialValue = null, c.id) { value = vm.numbersFor(c) }
+    val numbers by produceState<List<PhoneOption>?>(initialValue = null, c.id) { value = vm.numbersFor(c) }
     val list = numbers ?: return
-    val current = list.firstOrNull { vm.sameNumber(it, c.phoneNumber) }
-    val all = if (current != null) list else listOf(c.phoneNumber) + list
+    val current = list.firstOrNull { vm.sameNumber(it.number, c.phoneNumber) }
+    val all = if (current != null) list else listOf(PhoneOption(c.phoneNumber, null)) + list
     EditContactScreen(
         title = stringResource(R.string.edit_title),
         name = c.displayName,
         photoUri = c.photoUri,
         numbers = all,
-        initialNumber = current ?: c.phoneNumber,
+        initialNumber = current?.number ?: c.phoneNumber,
         initialFrequency = c.frequencyDays,
         initialChannel = c.preferredChannel,
         saveLabel = stringResource(R.string.save),
