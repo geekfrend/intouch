@@ -50,9 +50,17 @@ class Prefs(context: Context) {
         get() = p.getBoolean("askedNotifications", false)
         set(v) { p.edit().putBoolean("askedNotifications", v).apply() }
 
+    var askedSms: Boolean
+        get() = p.getBoolean("askedSms", false)
+        set(v) { p.edit().putBoolean("askedSms", v).apply() }
+
     var lastCallLogSync: Long
         get() = p.getLong("lastCallLogSync", 0L)
         set(v) { p.edit().putLong("lastCallLogSync", v).apply() }
+
+    var lastSmsSync: Long
+        get() = p.getLong("lastSmsSync", 0L)
+        set(v) { p.edit().putLong("lastSmsSync", v).apply() }
 
     var lastWhatsAppDetectedAt: Long
         get() = p.getLong("lastWaAt", 0L)

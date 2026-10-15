@@ -23,8 +23,8 @@
     <string name="section_on_track">On track</string>
     <string name="summary_format">%1$d on track · %2$d overdue · %3$s</string>
     <plurals name="calls_this_month">
-        <item quantity="one">%d call this month</item>
-        <item quantity="other">%d calls this month</item>
+        <item quantity="one">%d call or text this month</item>
+        <item quantity="other">%d calls or texts this month</item>
     </plurals>
 
     <!-- Status text -->
@@ -40,8 +40,8 @@
     </plurals>
     <string name="due_snoozed_until">Snoozed until %1$s</string>
     <string name="next_due">next call by %1$s</string>
-    <string name="last_call_none">No calls yet</string>
-    <string name="last_call_format">Last call %1$s · %2$s</string>
+    <string name="last_call_none">No calls or texts yet</string>
+    <string name="last_call_format">Last in touch %1$s · %2$s</string>
     <string name="ago_today">today</string>
     <string name="ago_yesterday">yesterday</string>
     <plurals name="ago_days">
@@ -56,9 +56,12 @@
     <!-- Channels, directions, outcomes -->
     <string name="channel_phone">Phone</string>
     <string name="channel_whatsapp">WhatsApp</string>
+    <string name="channel_text">Text</string>
     <string name="channel_other">Other</string>
     <string name="call_phone">Call</string>
     <string name="call_whatsapp">WhatsApp</string>
+    <string name="call_text">Text</string>
+    <string name="more_ways">More ways to reach them</string>
     <string name="direction_outgoing">Outgoing</string>
     <string name="direction_incoming">Incoming</string>
     <string name="direction_unknown">Call</string>
@@ -70,6 +73,7 @@
     <string name="source_whatsapp">detected in WhatsApp</string>
     <string name="source_prompt">you confirmed</string>
     <string name="source_manual">logged by hand</string>
+    <string name="source_sms">from your messages</string>
 
     <!-- Frequency -->
     <string name="freq_weekly">Weekly</string>
@@ -89,15 +93,15 @@
     <!-- Contact detail -->
     <string name="detail_missing">This person isn\'t in your phone\'s contacts anymore.</string>
     <string name="detail_relink">Relink to a contact</string>
-    <string name="action_log_call">Log a call</string>
+    <string name="action_log_call">Log a call or text</string>
     <string name="action_snooze">Snooze</string>
     <string name="action_cancel_snooze">End snooze</string>
     <string name="action_skip">Skip this time</string>
     <string name="action_phone_call">Phone call</string>
     <string name="stats_title">How it\'s going</string>
     <plurals name="stats_calls_90">
-        <item quantity="one">%d call in the last 90 days</item>
-        <item quantity="other">%d calls in the last 90 days</item>
+        <item quantity="one">In touch %d time in the last 90 days</item>
+        <item quantity="other">In touch %d times in the last 90 days</item>
     </plurals>
     <string name="stats_average_gap">Usually every %1$d days (goal: %2$d)</string>
     <string name="stats_gap_none">Not enough calls yet to show a pattern</string>
@@ -116,17 +120,17 @@
     <string name="edit_title">Edit</string>
     <string name="edit_number">Number</string>
     <string name="edit_frequency">How often do you want to talk?</string>
-    <string name="edit_channel">Usually call on</string>
+    <string name="edit_channel">Usually reach them by</string>
     <string name="add_last_talk_title">When did you last talk?</string>
-    <string name="add_last_talk_auto">Phone call on %1$s (from your call history)</string>
-    <string name="add_last_talk_none">No phone calls in the last 90 days</string>
+    <string name="add_last_talk_auto">Call or text on %1$s (from your phone)</string>
+    <string name="add_last_talk_none">No calls or texts in the last 90 days</string>
     <string name="add_last_talk_set">%1$s (set by you)</string>
     <string name="add_last_talk_pick">Set a date</string>
     <string name="add_last_talk_clear">Clear</string>
     <string name="add_last_talk_note">InTouch can\'t see WhatsApp calls from before you add someone. If you last talked on WhatsApp, set the date. New WhatsApp calls are logged automatically.</string>
 
     <!-- Dialogs -->
-    <string name="log_title">Log a call</string>
+    <string name="log_title">Log a call or text</string>
     <string name="log_direction">Who called?</string>
     <string name="log_channel">On</string>
     <string name="log_outcome">Result</string>
@@ -187,10 +191,11 @@
     <string name="setup_title">Welcome to InTouch</string>
     <string name="setup_intro">InTouch shows who you\'re due to call and logs your calls automatically. Everything stays on this phone.</string>
     <string name="setup_permissions_title">Permissions</string>
-    <string name="setup_permissions_body">Contacts to pick people, call history to log phone calls, phone to call in one tap, and notifications to check whether a WhatsApp call went through.</string>
+    <string name="setup_permissions_body">Contacts to pick people, call history to log phone calls, phone to call in one tap, texts to log texts (who and when only, never what you wrote), and notifications to check whether a WhatsApp call went through.</string>
     <string name="setup_perm_contacts">Contacts</string>
     <string name="setup_perm_call_log">Call history</string>
     <string name="setup_perm_phone">Phone calls</string>
+    <string name="setup_perm_sms">Texts (who and when, never message content)</string>
     <string name="setup_perm_notifications">Notifications (call check-ins)</string>
     <string name="setup_grant">Allow</string>
     <string name="setup_wa_body">Turn on notification access so InTouch can log WhatsApp calls. It only reads WhatsApp\'s call notifications, never messages. You can turn this off in Settings.</string>
@@ -202,6 +207,9 @@
     <!-- Messages -->
     <string name="msg_whatsapp_missing">WhatsApp isn\'t installed.</string>
     <string name="msg_call_failed">Couldn\'t start the call.</string>
+    <string name="msg_text_failed">Couldn\'t open your messages app.</string>
+    <string name="msg_text_logged">Logged a text with %1$s</string>
+    <string name="undo">Undo</string>
     <string name="msg_contact_unreadable">Couldn\'t read that contact.</string>
     <string name="msg_no_number">That contact has no phone number.</string>
     <string name="msg_contacts_permission">InTouch needs contacts access to add people.</string>

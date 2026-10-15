@@ -10,6 +10,7 @@ import com.geekfrend.intouch.device.CallLogReader
 import com.geekfrend.intouch.device.ContactsReader
 import com.geekfrend.intouch.device.PhoneOption
 import com.geekfrend.intouch.device.PickedContact
+import com.geekfrend.intouch.device.SmsReader
 import com.geekfrend.intouch.domain.ContactStats
 import com.geekfrend.intouch.domain.ContactStatus
 import com.geekfrend.intouch.domain.DAY_MS
@@ -112,19 +113,22 @@ class Repository(
 
     // ---- Contacts ------------------------------------------------------------------------------
 
-    /** Fills in each number's last connected phone call in the past 90 days, for the add screen. */
+    /** Fills in each number's last connected phone call or text in the past 90 days, for the add screen. */
     suspend fun withLastPhoneCalls(p: PickedContact): PickedContact = withContext(Dispatchers.IO) {
-        if (!granted(Manifest.permission.READ_CALL_LOG)) return@withContext p
         val region = prefs.region
         val minSeconds = prefs.minCallSeconds
-        val rows = try {
-            CallLogReader.since(context, System.currentTimeMillis() - 90 * DAY_MS)
-        } catch (e: SecurityException) {
-            return@withContext p
+        val since = System.currentTimeMillis() - 90 * DAY_MS
+        val calls = mutableListOf<Pair<String, Long>>()
+        if (granted(Manifest.permission.READ_CALL_LOG)) {
+            runCatching { CallLogReader.since(context, since) }.getOrElse { emptyList() }
+                .filter { (it.type == CallLog.Calls.INCOMING_TYPE || it.type == CallLog.Calls.OUTGOING_TYPE) && it.durationSec >= minSeconds }
+                .forEach { calls.add(PhoneNumbers.normalize(it.number, region) to it.date) }
         }
-        val calls = rows
-            .filter { (it.type == CallLog.Calls.INCOMING_TYPE || it.type == CallLog.Calls.OUTGOING_TYPE) && it.durationSec >= minSeconds }
-            .map { PhoneNumbers.normalize(it.number, region) to it.date }
+        if (granted(Manifest.permission.READ_SMS)) {
+            runCatching { SmsReader.since(context, since) }.getOrElse { emptyList() }
+                .forEach { calls.add(PhoneNumbers.normalize(it.address, region) to it.date) }
+        }
+        if (calls.isEmpty()) return@withContext p
         p.copy(
             numbers = p.numbers.map { option ->
                 val n = PhoneNumbers.normalize(option.number, region)
@@ -162,6 +166,7 @@ class Repository(
             )
             contacts.upsert(c)
             importCallHistory(listOf(c), now - 90 * DAY_MS)
+            importTexts(listOf(c), now - 90 * DAY_MS)
             if (lastTalked != null) {
                 val at = lastTalked.atTime(12, 0).atZone(zone).toInstant().toEpochMilli().coerceAtMost(now)
                 interactions.insert(
@@ -180,6 +185,7 @@ class Repository(
             contacts.upsert(updated)
             if (!PhoneNumbers.matches(normalized, c.phoneNumber)) {
                 importCallHistory(listOf(updated), System.currentTimeMillis() - 90 * DAY_MS)
+                importTexts(listOf(updated), System.currentTimeMillis() - 90 * DAY_MS)
             }
         }
 
@@ -263,15 +269,61 @@ class Repository(
 
     // ---- Automatic tracking --------------------------------------------------------------------
 
-    /** FR-10: reads new call-history entries for tracked numbers. Returns how many were added. */
+    /** FR-10: reads new call-history and SMS entries for tracked numbers. Returns how many were added. */
     suspend fun syncCallLog(): Int = withContext(Dispatchers.IO) {
-        if (!granted(Manifest.permission.READ_CALL_LOG)) return@withContext 0
         val now = System.currentTimeMillis()
-        val last = prefs.lastCallLogSync
-        val since = if (last == 0L) now - 90 * DAY_MS else last - HOUR_MS
-        val added = importCallHistory(contacts.allActive(), since)
-        prefs.lastCallLogSync = now
+        val active = contacts.allActive()
+        var added = 0
+        if (granted(Manifest.permission.READ_CALL_LOG)) {
+            val last = prefs.lastCallLogSync
+            added += importCallHistory(active, if (last == 0L) now - 90 * DAY_MS else last - HOUR_MS)
+            prefs.lastCallLogSync = now
+        }
+        if (granted(Manifest.permission.READ_SMS)) {
+            val last = prefs.lastSmsSync
+            added += importTexts(active, if (last == 0L) now - 90 * DAY_MS else last - HOUR_MS)
+            prefs.lastSmsSync = now
+        }
         added
+    }
+
+    /** One text entry per person per day, so a long conversation doesn't flood the call log. */
+    private fun textKey(contactId: String, time: Long): String =
+        "text:$contactId:${java.time.Instant.ofEpochMilli(time).atZone(zone).toLocalDate().toEpochDay()}"
+
+    /** Texts sent or received with tracked numbers, from the SMS history. Message text is never read. */
+    private suspend fun importTexts(cs: List<TrackedContact>, since: Long): Int {
+        if (cs.isEmpty() || !granted(Manifest.permission.READ_SMS)) return 0
+        val region = prefs.region
+        val keyed = cs.map { it to PhoneNumbers.normalize(it.phoneNumber, region) }
+        val rows = try {
+            SmsReader.since(context, since)
+        } catch (e: SecurityException) {
+            return 0
+        }
+        var added = 0
+        for (r in rows) {
+            val number = PhoneNumbers.normalize(r.address, region)
+            val contact = keyed.firstOrNull { PhoneNumbers.matches(it.second, number) }?.first ?: continue
+            val id = interactions.insert(
+                Interaction(newId(), contact.id, r.date, Channel.TEXT,
+                    if (r.sent) Direction.OUTGOING else Direction.INCOMING,
+                    Outcome.CONNECTED, Source.SMS_HISTORY, null, textKey(contact.id, r.date), false)
+            )
+            if (id != -1L) added++
+        }
+        return added
+    }
+
+    /** A text started from InTouch. Returns the entry's ID (for Undo), or null if today already has one. */
+    suspend fun logTextFromApp(contactId: String): String? = withContext(Dispatchers.IO) {
+        val now = System.currentTimeMillis()
+        val id = newId()
+        val row = interactions.insert(
+            Interaction(id, contactId, now, Channel.TEXT, Direction.OUTGOING, Outcome.CONNECTED,
+                Source.MANUAL, null, textKey(contactId, now), false)
+        )
+        if (row == -1L) null else id
     }
 
     private suspend fun importCallHistory(cs: List<TrackedContact>, since: Long): Int {
@@ -487,6 +539,7 @@ class Repository(
             prefs.whatsappDetection = s.optBoolean("whatsappDetection", prefs.whatsappDetection)
         }
         prefs.lastCallLogSync = 0L
+        prefs.lastSmsSync = 0L
         cs.size
     }
 

@@ -140,6 +140,18 @@ class InTouchViewModel(application: Application) : AndroidViewModel(application)
                 prefs.clearPending()
                 say(R.string.msg_call_failed)
             }
+        } else if (channel == Channel.TEXT) {
+            if (!launch(activity, CallLauncher.textIntent(contact.phoneNumber))) {
+                say(R.string.msg_text_failed)
+                return
+            }
+            // Logged right away, so chat-style messages the SMS history can't see still count.
+            viewModelScope.launch {
+                val id = repo.logTextFromApp(contact.id) ?: return@launch
+                _messages.tryEmit(
+                    UiMessage(str(R.string.msg_text_logged, contact.displayName), str(R.string.undo)) { deleteEntry(id) }
+                )
+            }
         } else if (!launch(activity, CallLauncher.phoneIntent(activity, contact.phoneNumber))) {
             say(R.string.msg_call_failed)
         }
@@ -249,6 +261,7 @@ class InTouchViewModel(application: Application) : AndroidViewModel(application)
         contacts = granted(Manifest.permission.READ_CONTACTS),
         callLog = granted(Manifest.permission.READ_CALL_LOG),
         phone = granted(Manifest.permission.CALL_PHONE),
+        sms = granted(Manifest.permission.READ_SMS),
         notifications = Build.VERSION.SDK_INT < 33 || granted(Manifest.permission.POST_NOTIFICATIONS),
         notificationAccess = hasNotificationAccess(),
         batteryExempt = (app.getSystemService(PowerManager::class.java))?.isIgnoringBatteryOptimizations(app.packageName) == true,

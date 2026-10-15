@@ -147,7 +147,7 @@ fun EditContactScreen(
 
             Text(stringResource(R.string.edit_channel), style = MaterialTheme.typography.titleSmall)
             Row(horizontalArrangement = Arrangement.spacedBy(spacing.s)) {
-                listOf(Channel.WHATSAPP, Channel.PHONE).forEach { ch ->
+                listOf(Channel.WHATSAPP, Channel.PHONE, Channel.TEXT).forEach { ch ->
                     FilterChip(selected = channel == ch, onClick = { channel = ch }, label = { Text(Format.channel(res, ch)) })
                 }
             }

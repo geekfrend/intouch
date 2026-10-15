@@ -139,6 +139,7 @@ object WidgetUpdater {
         val intent = when (contact.preferredChannel) {
             Channel.WHATSAPP -> CallLauncher.whatsAppIntent(context, contact, region)
                 ?: CallLauncher.phoneIntent(context, contact.phoneNumber)
+            Channel.TEXT -> CallLauncher.textIntent(contact.phoneNumber)
             else -> CallLauncher.phoneIntent(context, contact.phoneNumber)
         }
         return PendingIntent.getActivity(context, code, intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), FLAGS)

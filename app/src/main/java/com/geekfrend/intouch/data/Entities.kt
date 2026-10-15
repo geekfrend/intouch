@@ -5,14 +5,14 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
-enum class Channel { PHONE, WHATSAPP, OTHER }
+enum class Channel { PHONE, WHATSAPP, TEXT, OTHER }
 
 enum class Direction { OUTGOING, INCOMING, UNKNOWN }
 
 /** Only CONNECTED and SKIPPED reset a contact's timer. */
 enum class Outcome { CONNECTED, NO_ANSWER, LEFT_MESSAGE, SKIPPED }
 
-enum class Source { CALL_HISTORY, WHATSAPP_NOTIFICATION, APP_PROMPT, MANUAL }
+enum class Source { CALL_HISTORY, WHATSAPP_NOTIFICATION, APP_PROMPT, MANUAL, SMS_HISTORY }
 
 /** One person you want to stay in touch with. */
 @Entity(tableName = "contacts")

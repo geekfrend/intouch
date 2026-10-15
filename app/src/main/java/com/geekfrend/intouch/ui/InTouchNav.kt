@@ -71,6 +71,7 @@ private val PERMISSIONS: Array<String> = buildList {
     add(Manifest.permission.READ_CONTACTS)
     add(Manifest.permission.READ_CALL_LOG)
     add(Manifest.permission.CALL_PHONE)
+    add(Manifest.permission.READ_SMS)
     if (Build.VERSION.SDK_INT >= 33) add(Manifest.permission.POST_NOTIFICATIONS)
 }.toTypedArray()
 
@@ -151,15 +152,23 @@ fun InTouchNav(vm: InTouchViewModel, openContact: StateFlow<String?>, onOpenHand
     val prompt by vm.prompt.collectAsStateWithLifecycle()
     prompt?.let { c -> PromptDialog(c.displayName) { vm.answerPrompt(it) } }
 
-    // People who finished setup before check-in notifications existed are asked once.
-    val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+    // People who finished setup before notifications and texts were added are asked once for each.
+    val newPermissions = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        vm.onPermissionsChanged()
+    }
     LaunchedEffect(Unit) {
-        if (Build.VERSION.SDK_INT >= 33 && vm.prefs.setupDone && !vm.prefs.askedNotifications &&
-            !granted(activity, Manifest.permission.POST_NOTIFICATIONS)
-        ) {
-            vm.prefs.askedNotifications = true
-            notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+        if (!vm.prefs.setupDone) return@LaunchedEffect
+        val ask = buildList {
+            if (Build.VERSION.SDK_INT >= 33 && !vm.prefs.askedNotifications &&
+                !granted(activity, Manifest.permission.POST_NOTIFICATIONS)
+            ) {
+                add(Manifest.permission.POST_NOTIFICATIONS)
+            }
+            if (!vm.prefs.askedSms && !granted(activity, Manifest.permission.READ_SMS)) add(Manifest.permission.READ_SMS)
         }
+        vm.prefs.askedNotifications = true
+        vm.prefs.askedSms = true
+        if (ask.isNotEmpty()) newPermissions.launch(ask.toTypedArray())
     }
 }
 

@@ -65,7 +65,7 @@ fun LogCallDialog(
                 }
                 Label(R.string.log_channel)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(spacing.s)) {
-                    listOf(Channel.WHATSAPP, Channel.PHONE, Channel.OTHER).forEach { c ->
+                    listOf(Channel.WHATSAPP, Channel.PHONE, Channel.TEXT, Channel.OTHER).forEach { c ->
                         FilterChip(selected = draft.channel == c, onClick = { draft = draft.copy(channel = c) }, label = { Text(Format.channel(res, c)) })
                     }
                 }
@@ -202,7 +202,8 @@ fun EntryActionsDialog(
     onDismiss: () -> Unit,
 ) {
     val res = LocalContext.current.resources
-    val automatic = entry.source == Source.CALL_HISTORY || entry.source == Source.WHATSAPP_NOTIFICATION
+    val automatic = entry.source == Source.CALL_HISTORY || entry.source == Source.WHATSAPP_NOTIFICATION ||
+        entry.source == Source.SMS_HISTORY
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(Format.entryTitle(res, entry)) },

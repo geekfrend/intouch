@@ -40,6 +40,9 @@ object CallLauncher {
             .setPackage(WA_PKG)
     }
 
+    /** Opens the default messages app with a new text to this number. */
+    fun textIntent(number: String): Intent = Intent(Intent.ACTION_SENDTO, Uri.fromParts("smsto", number, null))
+
     fun whatsAppChatIntent(number: String, region: String): Intent {
         val digits = PhoneNumbers.normalize(number, region).filter { it.isDigit() }
         return Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/$digits")).setPackage(WA_PKG)

@@ -17,14 +17,25 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
+import com.geekfrend.intouch.R
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,7 +69,10 @@ fun statusColor(state: DueState): Color = when (state) {
     DueState.ON_TRACK -> InTouchTheme.status.onTrack
 }
 
-fun otherChannel(c: Channel): Channel = if (c == Channel.WHATSAPP) Channel.PHONE else Channel.WHATSAPP
+/** The ways to reach someone, in button order. */
+val REACH_CHANNELS = listOf(Channel.WHATSAPP, Channel.PHONE, Channel.TEXT)
+
+fun otherChannels(c: Channel): List<Channel> = REACH_CHANNELS - c
 
 /** Contact photo from the address book, or initials. */
 @Composable
@@ -132,15 +146,28 @@ fun DueRow(item: DueItem, compact: Boolean, onOpen: () -> Unit, onCall: (Channel
             }
         }
         Spacer(Modifier.width(spacing.s))
-        if (!compact) {
-            val other = otherChannel(c.preferredChannel)
-            OutlinedButton(onClick = { onCall(other) }, contentPadding = PaddingValues(horizontal = spacing.m)) {
-                Text(Format.callLabel(res, other))
-            }
-            Spacer(Modifier.width(spacing.xs))
-        }
         FilledTonalButton(onClick = { onCall(c.preferredChannel) }, contentPadding = PaddingValues(horizontal = spacing.m)) {
             Text(Format.callLabel(res, c.preferredChannel))
+        }
+        if (!compact) {
+            // The other ways to reach them, in a menu so the row keeps room for the name.
+            var menuOpen by remember { mutableStateOf(false) }
+            Box {
+                IconButton(onClick = { menuOpen = true }) {
+                    Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.more_ways))
+                }
+                DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                    otherChannels(c.preferredChannel).forEach { ch ->
+                        DropdownMenuItem(
+                            text = { Text(Format.callLabel(res, ch)) },
+                            onClick = {
+                                menuOpen = false
+                                onCall(ch)
+                            },
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -156,14 +183,15 @@ fun SectionHeader(title: String, count: Int, state: DueState) {
     )
 }
 
-/** Phone and WhatsApp buttons, preferred one filled. */
+/** WhatsApp, Call and Text buttons, the preferred one filled and first. */
 @Composable
 fun CallButtons(preferred: Channel, onCall: (Channel) -> Unit) {
     val res = LocalContext.current.resources
-    val other = otherChannel(preferred)
     Row(horizontalArrangement = Arrangement.spacedBy(InTouchTheme.spacing.s), modifier = Modifier.fillMaxWidth()) {
-        Button(onClick = { onCall(preferred) }, modifier = Modifier.weight(1f)) { Text(Format.callLabel(res, preferred)) }
-        OutlinedButton(onClick = { onCall(other) }, modifier = Modifier.weight(1f)) { Text(Format.callLabel(res, other)) }
+        Button(onClick = { onCall(preferred) }, modifier = Modifier.weight(1f)) { Text(Format.callLabel(res, preferred), maxLines = 1) }
+        otherChannels(preferred).forEach { ch ->
+            OutlinedButton(onClick = { onCall(ch) }, modifier = Modifier.weight(1f)) { Text(Format.callLabel(res, ch), maxLines = 1) }
+        }
     }
 }
 

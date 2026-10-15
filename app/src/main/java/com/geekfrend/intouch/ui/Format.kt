@@ -60,13 +60,19 @@ object Format {
         when (c) {
             Channel.PHONE -> R.string.channel_phone
             Channel.WHATSAPP -> R.string.channel_whatsapp
+            Channel.TEXT -> R.string.channel_text
             Channel.OTHER, null -> R.string.channel_other
         }
     )
 
-    /** Label on a call button. */
-    fun callLabel(res: Resources, c: Channel): String =
-        res.getString(if (c == Channel.WHATSAPP) R.string.call_whatsapp else R.string.call_phone)
+    /** Label on a call or text button. */
+    fun callLabel(res: Resources, c: Channel): String = res.getString(
+        when (c) {
+            Channel.WHATSAPP -> R.string.call_whatsapp
+            Channel.TEXT -> R.string.call_text
+            else -> R.string.call_phone
+        }
+    )
 
     fun direction(res: Resources, d: Direction): String = res.getString(
         when (d) {
@@ -91,6 +97,7 @@ object Format {
             Source.WHATSAPP_NOTIFICATION -> R.string.source_whatsapp
             Source.APP_PROMPT -> R.string.source_prompt
             Source.MANUAL -> R.string.source_manual
+            Source.SMS_HISTORY -> R.string.source_sms
         }
     )
 

@@ -43,6 +43,7 @@ The cover screen layout switches on below 480 dp of screen height (`COMPACT_MAX_
 
 ## Known v1 design gaps
 
-- Call buttons use text labels ("Call", "WhatsApp"); icons are left for the design pass.
+- Call buttons use text labels ("WhatsApp", "Call", "Text"); icons are left for the design pass.
+- Due-list rows show the preferred channel as a button and the other two in a ⋮ menu, to leave room for the name.
 - Typography and shapes are Material defaults.
 - The app icon is a placeholder phone glyph.

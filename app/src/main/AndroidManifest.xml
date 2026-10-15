@@ -4,6 +4,8 @@
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.READ_CALL_LOG" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
+    <!-- Texts count as being in touch. Only who/when/direction is read, never message text. -->
+    <uses-permission android:name="android.permission.READ_SMS" />
     <!-- FR-12: the "Did you connect?" check-in notification. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
