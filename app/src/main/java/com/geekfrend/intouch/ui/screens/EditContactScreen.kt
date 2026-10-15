@@ -22,10 +22,12 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -42,6 +44,8 @@ import com.geekfrend.intouch.R
 import com.geekfrend.intouch.data.Channel
 import com.geekfrend.intouch.device.PhoneOption
 import com.geekfrend.intouch.ui.Format
+import com.geekfrend.intouch.ui.dialogs.pickPastDate
+import java.time.LocalDate
 import com.geekfrend.intouch.ui.components.Avatar
 import com.geekfrend.intouch.ui.theme.InTouchTheme
 
@@ -59,10 +63,14 @@ fun EditContactScreen(
     initialFrequency: Int,
     initialChannel: Channel,
     saveLabel: String,
-    onSave: (number: String, frequencyDays: Int, channel: Channel) -> Unit,
+    onSave: (number: String, frequencyDays: Int, channel: Channel, lastTalked: LocalDate?) -> Unit,
     onCancel: () -> Unit,
+    /** Shows "When did you last talk?" (when adding someone). */
+    showLastTalked: Boolean = false,
 ) {
-    val res = LocalContext.current.resources
+    val context = LocalContext.current
+    val res = context.resources
+    var lastTalked by remember { mutableStateOf<LocalDate?>(null) }
     val spacing = InTouchTheme.spacing
     var number by remember { mutableStateOf(initialNumber) }
     var frequency by remember { mutableIntStateOf(initialFrequency) }
@@ -144,8 +152,35 @@ fun EditContactScreen(
                 }
             }
 
+            if (showLastTalked) {
+                Text(stringResource(R.string.add_last_talk_title), style = MaterialTheme.typography.titleSmall)
+                val auto = numbers.firstOrNull { it.number == number }?.lastCallAt
+                val picked = lastTalked
+                Text(
+                    when {
+                        picked != null -> stringResource(R.string.add_last_talk_set, Format.date(picked))
+                        auto != null -> stringResource(R.string.add_last_talk_auto, Format.date(Format.localDate(auto)))
+                        else -> stringResource(R.string.add_last_talk_none)
+                    }
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(spacing.s)) {
+                    OutlinedButton(onClick = {
+                        val start = picked ?: auto?.let { Format.localDate(it) } ?: LocalDate.now()
+                        pickPastDate(context, start) { lastTalked = it }
+                    }) { Text(stringResource(R.string.add_last_talk_pick)) }
+                    if (picked != null) {
+                        TextButton(onClick = { lastTalked = null }) { Text(stringResource(R.string.add_last_talk_clear)) }
+                    }
+                }
+                Text(
+                    stringResource(R.string.add_last_talk_note),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
             Button(
-                onClick = { effective?.let { onSave(number, it, channel) } },
+                onClick = { effective?.let { onSave(number, it, channel, lastTalked) } },
                 enabled = effective != null && number.isNotBlank(),
                 modifier = Modifier.fillMaxWidth(),
             ) { Text(saveLabel) }

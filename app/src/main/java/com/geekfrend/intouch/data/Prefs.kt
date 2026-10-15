@@ -45,6 +45,11 @@ class Prefs(context: Context) {
     val region: String
         get() = PhoneNumbers.regionFor(countryCode)
 
+    /** Whether InTouch has asked once for notification permission (for people who finished setup earlier). */
+    var askedNotifications: Boolean
+        get() = p.getBoolean("askedNotifications", false)
+        set(v) { p.edit().putBoolean("askedNotifications", v).apply() }
+
     var lastCallLogSync: Long
         get() = p.getLong("lastCallLogSync", 0L)
         set(v) { p.edit().putLong("lastCallLogSync", v).apply() }

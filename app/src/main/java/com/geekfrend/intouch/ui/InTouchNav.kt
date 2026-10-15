@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -66,11 +67,12 @@ private object Routes {
 /** Below this height the layout switches to the compact cover-screen version (FR-21). */
 private const val COMPACT_MAX_HEIGHT_DP = 480
 
-private val PERMISSIONS = arrayOf(
-    Manifest.permission.READ_CONTACTS,
-    Manifest.permission.READ_CALL_LOG,
-    Manifest.permission.CALL_PHONE,
-)
+private val PERMISSIONS: Array<String> = buildList {
+    add(Manifest.permission.READ_CONTACTS)
+    add(Manifest.permission.READ_CALL_LOG)
+    add(Manifest.permission.CALL_PHONE)
+    if (Build.VERSION.SDK_INT >= 33) add(Manifest.permission.POST_NOTIFICATIONS)
+}.toTypedArray()
 
 private fun granted(context: Context, permission: String) =
     ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
@@ -91,6 +93,12 @@ private fun openAppInfo(activity: Activity) =
 
 private fun openBattery(activity: Activity) =
     openSystem(activity, Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+
+private fun openNotificationSettings(activity: Activity) =
+    openSystem(
+        activity,
+        Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, activity.packageName),
+    )
 
 /** Navigation between screens. Each route connects a stateless screen to the view model. */
 @Composable
@@ -142,6 +150,17 @@ fun InTouchNav(vm: InTouchViewModel, openContact: StateFlow<String?>, onOpenHand
 
     val prompt by vm.prompt.collectAsStateWithLifecycle()
     prompt?.let { c -> PromptDialog(c.displayName) { vm.answerPrompt(it) } }
+
+    // People who finished setup before check-in notifications existed are asked once.
+    val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= 33 && vm.prefs.setupDone && !vm.prefs.askedNotifications &&
+            !granted(activity, Manifest.permission.POST_NOTIFICATIONS)
+        ) {
+            vm.prefs.askedNotifications = true
+            notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
 }
 
 @Composable
@@ -309,13 +328,14 @@ private fun AddRoute(vm: InTouchViewModel, nav: NavHostController) {
         initialFrequency = 14,
         initialChannel = if (p.hasWhatsApp) Channel.WHATSAPP else Channel.PHONE,
         saveLabel = stringResource(R.string.add_save),
-        onSave = { number, frequency, channel ->
-            vm.addContact(number, frequency, channel) { id ->
+        onSave = { number, frequency, channel, lastTalked ->
+            vm.addContact(number, frequency, channel, lastTalked) { id ->
                 nav.popBackStack()
                 nav.navigate(Routes.contact(id))
             }
         },
         onCancel = { nav.popBackStack() },
+        showLastTalked = true,
     )
 }
 
@@ -337,7 +357,7 @@ private fun EditRoute(vm: InTouchViewModel, id: String, onDone: () -> Unit) {
         initialFrequency = c.frequencyDays,
         initialChannel = c.preferredChannel,
         saveLabel = stringResource(R.string.save),
-        onSave = { number, frequency, channel ->
+        onSave = { number, frequency, channel, _ ->
             vm.saveContact(id, number, frequency, channel)
             onDone()
         },
@@ -366,6 +386,7 @@ private fun SettingsRoute(vm: InTouchViewModel, nav: NavHostController, activity
         onToggleWhatsApp = vm::setWhatsAppDetection,
         onOpenNotificationAccess = { openNotificationAccess(activity) },
         onOpenAppInfo = { openAppInfo(activity) },
+        onOpenNotificationSettings = { openNotificationSettings(activity) },
         onMinSeconds = vm::setMinCallSeconds,
         onCountryCode = vm::setCountryCode,
         onBattery = { openBattery(activity) },

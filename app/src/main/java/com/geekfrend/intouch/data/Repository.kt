@@ -19,6 +19,7 @@ import com.geekfrend.intouch.domain.HOUR_MS
 import com.geekfrend.intouch.domain.PhoneNumbers
 import com.geekfrend.intouch.domain.StatusCalculator
 import com.geekfrend.intouch.domain.Summary
+import com.geekfrend.intouch.notify.PromptNotifier
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -111,8 +112,38 @@ class Repository(
 
     // ---- Contacts ------------------------------------------------------------------------------
 
-    /** FR-1 to FR-3: adds the person, then pulls their last 90 days from the call history. */
-    suspend fun addContact(p: PickedContact, number: String, frequencyDays: Int, channel: Channel): String =
+    /** Fills in each number's last connected phone call in the past 90 days, for the add screen. */
+    suspend fun withLastPhoneCalls(p: PickedContact): PickedContact = withContext(Dispatchers.IO) {
+        if (!granted(Manifest.permission.READ_CALL_LOG)) return@withContext p
+        val region = prefs.region
+        val minSeconds = prefs.minCallSeconds
+        val rows = try {
+            CallLogReader.since(context, System.currentTimeMillis() - 90 * DAY_MS)
+        } catch (e: SecurityException) {
+            return@withContext p
+        }
+        val calls = rows
+            .filter { (it.type == CallLog.Calls.INCOMING_TYPE || it.type == CallLog.Calls.OUTGOING_TYPE) && it.durationSec >= minSeconds }
+            .map { PhoneNumbers.normalize(it.number, region) to it.date }
+        p.copy(
+            numbers = p.numbers.map { option ->
+                val n = PhoneNumbers.normalize(option.number, region)
+                option.copy(lastCallAt = calls.filter { PhoneNumbers.matches(it.first, n) }.maxOfOrNull { it.second })
+            }
+        )
+    }
+
+    /**
+     * FR-1 to FR-3: adds the person, then pulls their last 90 days from the call history.
+     * [lastTalked] is the date you set yourself, e.g. for a WhatsApp call the app couldn't see.
+     */
+    suspend fun addContact(
+        p: PickedContact,
+        number: String,
+        frequencyDays: Int,
+        channel: Channel,
+        lastTalked: LocalDate?,
+    ): String =
         withContext(Dispatchers.IO) {
             val now = System.currentTimeMillis()
             val c = TrackedContact(
@@ -131,6 +162,13 @@ class Repository(
             )
             contacts.upsert(c)
             importCallHistory(listOf(c), now - 90 * DAY_MS)
+            if (lastTalked != null) {
+                val at = lastTalked.atTime(12, 0).atZone(zone).toInstant().toEpochMilli().coerceAtMost(now)
+                interactions.insert(
+                    Interaction(newId(), c.id, at, channel, Direction.UNKNOWN, Outcome.CONNECTED,
+                        Source.MANUAL, null, null, false)
+                )
+            }
             c.id
         }
 
@@ -295,7 +333,10 @@ class Repository(
                 if (call.outgoing) Direction.OUTGOING else Direction.INCOMING,
                 outcome, Source.WHATSAPP_NOTIFICATION, call.durationSec, "wa:${contact.id}:${call.start}", false)
         )
-        if (prefs.pending()?.contactId == contact.id) prefs.clearPending()
+        if (prefs.pending()?.contactId == contact.id) {
+            prefs.clearPending()
+            PromptNotifier.cancel(context, contact.id)
+        }
     }
 
     /**
@@ -307,21 +348,37 @@ class Repository(
         val now = System.currentTimeMillis()
         if (p.channel != Channel.WHATSAPP || now - p.startedAt > 2 * HOUR_MS) {
             prefs.clearPending()
+            PromptNotifier.cancel(context, p.contactId)
             return@withContext null
         }
         val c = contacts.get(p.contactId)
         if (c == null || interactions.countWhatsAppSince(c.id, p.startedAt - 60_000) > 0) {
             prefs.clearPending()
+            PromptNotifier.cancel(context, p.contactId)
             return@withContext null
         }
         if (prefs.whatsappDetection && prefs.isWaCallActive(c.displayName)) return@withContext null
         c
     }
 
+    fun hasPendingWhatsAppCall(): Boolean {
+        val p = prefs.pending() ?: return false
+        return p.channel == Channel.WHATSAPP && System.currentTimeMillis() - p.startedAt <= 2 * HOUR_MS
+    }
+
+    /** Posts the "Did you connect?" notification if one is due. Returns false when not due or notifications are off. */
+    suspend fun notifyPromptIfDue(): Boolean {
+        val c = pendingPrompt() ?: return false
+        if (!PromptNotifier.canPost(context)) return false
+        PromptNotifier.show(context, c, prefs.pending()?.startedAt ?: System.currentTimeMillis())
+        return true
+    }
+
     suspend fun answerPrompt(contactId: String, outcome: Outcome) = withContext(Dispatchers.IO) {
+        PromptNotifier.cancel(context, contactId)
         val p = prefs.pending()
-        prefs.clearPending()
         if (p == null || p.contactId != contactId) return@withContext
+        prefs.clearPending()
         interactions.insert(
             Interaction(newId(), contactId, p.startedAt, Channel.WHATSAPP, Direction.OUTGOING, outcome,
                 Source.APP_PROMPT, null, "prompt:${p.startedAt}", false)

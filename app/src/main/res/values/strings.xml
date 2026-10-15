@@ -117,6 +117,13 @@
     <string name="edit_number">Number</string>
     <string name="edit_frequency">How often do you want to talk?</string>
     <string name="edit_channel">Usually call on</string>
+    <string name="add_last_talk_title">When did you last talk?</string>
+    <string name="add_last_talk_auto">Phone call on %1$s (from your call history)</string>
+    <string name="add_last_talk_none">No phone calls in the last 90 days</string>
+    <string name="add_last_talk_set">%1$s (set by you)</string>
+    <string name="add_last_talk_pick">Set a date</string>
+    <string name="add_last_talk_clear">Clear</string>
+    <string name="add_last_talk_note">InTouch can\'t see WhatsApp calls from before you add someone. If you last talked on WhatsApp, set the date. New WhatsApp calls are logged automatically.</string>
 
     <!-- Dialogs -->
     <string name="log_title">Log a call</string>
@@ -139,6 +146,9 @@
     <string name="prompt_yes">Yes</string>
     <string name="prompt_no_answer">No answer</string>
     <string name="prompt_left_message">Left message</string>
+    <string name="notif_channel_name">Call check-ins</string>
+    <string name="notif_channel_description">Asks whether a WhatsApp call went through when InTouch couldn\'t tell.</string>
+    <string name="notif_prompt_text">WhatsApp call at %1$s. Choose an answer below.</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
@@ -151,6 +161,11 @@
     <string name="restricted_hint">If the switch is greyed out: open App info, tap ⋮ in the top corner, choose \"Allow restricted settings\", then try again.</string>
     <string name="open_notification_access">Turn on access</string>
     <string name="open_app_info">App info</string>
+    <string name="settings_notif_title">Call check-ins</string>
+    <string name="settings_notif_body">When InTouch can\'t tell if a WhatsApp call went through, it asks \"Did you connect?\" in a notification.</string>
+    <string name="settings_notif_on">✓ Notifications are on</string>
+    <string name="settings_notif_off">Notifications are off, so InTouch asks when you next open the app instead.</string>
+    <string name="open_notification_settings">Notification settings</string>
     <string name="settings_min_title">Shortest call that counts</string>
     <string name="settings_min_body">Calls shorter than this don\'t reset the timer.</string>
     <string name="settings_country_title">Default country code</string>
@@ -172,10 +187,11 @@
     <string name="setup_title">Welcome to InTouch</string>
     <string name="setup_intro">InTouch shows who you\'re due to call and logs your calls automatically. Everything stays on this phone.</string>
     <string name="setup_permissions_title">Permissions</string>
-    <string name="setup_permissions_body">Contacts to pick people, call history to log phone calls, and phone to call in one tap.</string>
+    <string name="setup_permissions_body">Contacts to pick people, call history to log phone calls, phone to call in one tap, and notifications to check whether a WhatsApp call went through.</string>
     <string name="setup_perm_contacts">Contacts</string>
     <string name="setup_perm_call_log">Call history</string>
     <string name="setup_perm_phone">Phone calls</string>
+    <string name="setup_perm_notifications">Notifications (call check-ins)</string>
     <string name="setup_grant">Allow</string>
     <string name="setup_wa_body">Turn on notification access so InTouch can log WhatsApp calls. It only reads WhatsApp\'s call notifications, never messages. You can turn this off in Settings.</string>
     <string name="setup_wa_access">Notification access</string>

@@ -109,6 +109,19 @@ private fun pickDate(context: Context, time: Long, onPicked: (Long) -> Unit) {
     ).show()
 }
 
+/** A date picker that doesn't allow future dates. */
+fun pickPastDate(context: Context, initial: LocalDate, onPicked: (LocalDate) -> Unit) {
+    val dialog = DatePickerDialog(
+        context,
+        { _, y, m, d -> onPicked(LocalDate.of(y, m + 1, d)) },
+        initial.year,
+        initial.monthValue - 1,
+        initial.dayOfMonth,
+    )
+    dialog.datePicker.maxDate = System.currentTimeMillis()
+    dialog.show()
+}
+
 private fun pickTime(context: Context, time: Long, onPicked: (Long) -> Unit) {
     val z = Instant.ofEpochMilli(time).atZone(ZoneId.systemDefault())
     TimePickerDialog(

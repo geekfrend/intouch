@@ -26,10 +26,12 @@ data class SetupState(
     val contacts: Boolean,
     val callLog: Boolean,
     val phone: Boolean,
+    /** Permission to post the "Did you connect?" notification. Always true below Android 13. */
+    val notifications: Boolean,
     val notificationAccess: Boolean,
     val batteryExempt: Boolean,
 ) {
-    val permissionsDone: Boolean get() = contacts && callLog && phone
+    val permissionsDone: Boolean get() = contacts && callLog && phone && notifications
 }
 
 /** First-time setup: permissions, WhatsApp call detection (on by default) and background refresh. */
@@ -60,6 +62,7 @@ fun SetupScreen(
                 Check(state.contacts, R.string.setup_perm_contacts)
                 Check(state.callLog, R.string.setup_perm_call_log)
                 Check(state.phone, R.string.setup_perm_phone)
+                Check(state.notifications, R.string.setup_perm_notifications)
                 if (!state.permissionsDone) {
                     Button(onClick = onGrantPermissions) { Text(stringResource(R.string.setup_grant)) }
                 }

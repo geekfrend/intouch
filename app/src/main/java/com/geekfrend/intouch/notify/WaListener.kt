@@ -6,6 +6,7 @@ import android.service.notification.StatusBarNotification
 import com.geekfrend.intouch.app
 import com.geekfrend.intouch.domain.EndedWaCall
 import com.geekfrend.intouch.domain.WaEvent
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
@@ -40,8 +41,14 @@ class WaListener : NotificationListenerService() {
             app.prefs.saveWaTracker(tracker)
             result
         }
-        if (ended != null) {
-            app.scope.launch { app.repository.recordWhatsAppCall(ended) }
+        if (!posted) {
+            app.scope.launch {
+                if (ended != null) app.repository.recordWhatsAppCall(ended)
+                // A WhatsApp call screen just went away. If it was a call started from InTouch that
+                // detection couldn't confirm (e.g. it never connected), ask now in a notification.
+                delay(1_500)
+                app.repository.notifyPromptIfDue()
+            }
         }
     }
 

@@ -7,6 +7,7 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.PowerManager
 import androidx.annotation.StringRes
 import androidx.core.app.NotificationManagerCompat
@@ -29,6 +30,8 @@ import com.geekfrend.intouch.device.ContactsReader
 import com.geekfrend.intouch.device.PhoneOption
 import com.geekfrend.intouch.device.PickedContact
 import com.geekfrend.intouch.domain.PhoneNumbers
+import com.geekfrend.intouch.notify.PromptNotifier
+import com.geekfrend.intouch.work.PromptWork
 import com.geekfrend.intouch.ui.dialogs.LogDraft
 import com.geekfrend.intouch.ui.screens.SettingsState
 import com.geekfrend.intouch.ui.screens.SetupState
@@ -98,7 +101,13 @@ class InTouchViewModel(application: Application) : AndroidViewModel(application)
             runCatching { repo.syncCallLog() }
             // Give WhatsApp detection a moment to log a call that just ended before asking.
             delay(1_500)
-            _prompt.value = repo.pendingPrompt()
+            // Ask in a notification; fall back to a pop-up only when notifications are off.
+            _prompt.value = if (PromptNotifier.canPost(app)) {
+                repo.notifyPromptIfDue()
+                null
+            } else {
+                repo.pendingPrompt()
+            }
         }
     }
 
@@ -126,6 +135,7 @@ class InTouchViewModel(application: Application) : AndroidViewModel(application)
                 return
             }
             prefs.savePending(PendingCall(contact.id, Channel.WHATSAPP, System.currentTimeMillis()))
+            PromptWork.schedule(app)
             if (!launch(activity, intent) && !launch(activity, CallLauncher.whatsAppChatIntent(contact.phoneNumber, prefs.region))) {
                 prefs.clearPending()
                 say(R.string.msg_call_failed)
@@ -148,6 +158,7 @@ class InTouchViewModel(application: Application) : AndroidViewModel(application)
 
     suspend fun readPicked(uri: Uri): PickedContact? {
         val p = withContext(Dispatchers.IO) { runCatching { ContactsReader.readPicked(app, uri) }.getOrNull() }
+            ?.let { repo.withLastPhoneCalls(it) }
         pendingPick = p?.takeIf { it.numbers.isNotEmpty() }
         when {
             p == null -> say(R.string.msg_contact_unreadable)
@@ -156,10 +167,10 @@ class InTouchViewModel(application: Application) : AndroidViewModel(application)
         return pendingPick
     }
 
-    fun addContact(number: String, frequencyDays: Int, channel: Channel, onDone: (String) -> Unit) {
+    fun addContact(number: String, frequencyDays: Int, channel: Channel, lastTalked: LocalDate?, onDone: (String) -> Unit) {
         val p = pendingPick ?: return
         viewModelScope.launch {
-            val id = repo.addContact(p, number, frequencyDays, channel)
+            val id = repo.addContact(p, number, frequencyDays, channel, lastTalked)
             pendingPick = null
             onDone(id)
         }
@@ -224,6 +235,7 @@ class InTouchViewModel(application: Application) : AndroidViewModel(application)
     fun settingsState(archived: List<TrackedContact>): SettingsState = SettingsState(
         whatsappDetection = prefs.whatsappDetection,
         notificationAccess = hasNotificationAccess(),
+        notificationsAllowed = PromptNotifier.canPost(app),
         lastWhatsApp = prefs.lastWhatsAppDetectedAt.takeIf { it > 0 }?.let {
             Format.lastWhatsApp(app.resources, it, prefs.lastWhatsAppDetectedName)
         },
@@ -237,6 +249,7 @@ class InTouchViewModel(application: Application) : AndroidViewModel(application)
         contacts = granted(Manifest.permission.READ_CONTACTS),
         callLog = granted(Manifest.permission.READ_CALL_LOG),
         phone = granted(Manifest.permission.CALL_PHONE),
+        notifications = Build.VERSION.SDK_INT < 33 || granted(Manifest.permission.POST_NOTIFICATIONS),
         notificationAccess = hasNotificationAccess(),
         batteryExempt = (app.getSystemService(PowerManager::class.java))?.isIgnoringBatteryOptimizations(app.packageName) == true,
     )

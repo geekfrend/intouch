@@ -8,7 +8,12 @@ import android.provider.ContactsContract.Contacts
 import android.provider.ContactsContract.Data
 
 /** One of a contact's phone numbers, with its address-book label (Mobile, Work, Home or a custom one). */
-data class PhoneOption(val number: String, val label: String?)
+data class PhoneOption(
+    val number: String,
+    val label: String?,
+    /** Last connected phone call with this number in the past 90 days, filled in when adding someone. */
+    val lastCallAt: Long? = null,
+)
 
 /** A contact chosen in the system contact picker. */
 data class PickedContact(

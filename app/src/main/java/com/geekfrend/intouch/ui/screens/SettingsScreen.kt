@@ -45,6 +45,7 @@ import com.geekfrend.intouch.ui.theme.InTouchTheme
 data class SettingsState(
     val whatsappDetection: Boolean,
     val notificationAccess: Boolean,
+    val notificationsAllowed: Boolean,
     val lastWhatsApp: String?,
     val minCallSeconds: Int,
     val countryCode: Int,
@@ -63,6 +64,7 @@ fun SettingsScreen(
     onToggleWhatsApp: (Boolean) -> Unit,
     onOpenNotificationAccess: () -> Unit,
     onOpenAppInfo: () -> Unit,
+    onOpenNotificationSettings: () -> Unit,
     onMinSeconds: (Int) -> Unit,
     onCountryCode: (Int) -> Unit,
     onBattery: () -> Unit,
@@ -111,6 +113,16 @@ fun SettingsScreen(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+            }
+
+            SettingsCard(stringResource(R.string.settings_notif_title)) {
+                Text(stringResource(R.string.settings_notif_body), style = MaterialTheme.typography.bodySmall)
+                if (state.notificationsAllowed) {
+                    Text(stringResource(R.string.settings_notif_on), color = InTouchTheme.status.onTrack)
+                } else {
+                    Text(stringResource(R.string.settings_notif_off), color = MaterialTheme.colorScheme.error)
+                    OutlinedButton(onClick = onOpenNotificationSettings) { Text(stringResource(R.string.open_notification_settings)) }
+                }
             }
 
             SettingsCard(stringResource(R.string.settings_min_title)) {
