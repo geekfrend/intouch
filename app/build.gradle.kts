@@ -2,24 +2,24 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
+    id("com.google.devtools.ksp")
 }
 
 android {
-    namespace = "com.geekfrend.intouch.lab"
+    namespace = "com.geekfrend.intouch"
     compileSdk = 35
 
     defaultConfig {
-        // Separate app ID from the real app, so both can be installed side by side.
-        applicationId = "com.geekfrend.intouch.lab"
+        applicationId = "com.geekfrend.intouch"
         minSdk = 26
         targetSdk = 35
         versionCode = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInt()
-        versionName = "0.1-lab"
+        versionName = "1.0-beta"
     }
 
     signingConfigs {
-        // A fixed debug key checked into this private repo, so each new test
-        // build installs over the previous one instead of needing an uninstall.
+        // A fixed key checked into this private repo, so every new build
+        // installs over the previous one without uninstalling.
         getByName("debug") {
             storeFile = file("debug.keystore")
             storePassword = "android"
@@ -46,6 +46,10 @@ android {
     buildFeatures {
         compose = true
     }
+
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 dependencies {
@@ -54,6 +58,22 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.material3:material3")
-    implementation("androidx.activity:activity-compose:1.9.3")
+    implementation("androidx.compose.material:material-icons-core")
+    implementation("androidx.compose.ui:ui-tooling-preview")
+    debugImplementation("androidx.compose.ui:ui-tooling")
+
     implementation("androidx.core:core-ktx:1.15.0")
+    implementation("androidx.activity:activity-compose:1.9.3")
+    implementation("androidx.navigation:navigation-compose:2.8.5")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
+    implementation("androidx.work:work-runtime-ktx:2.10.0")
+
+    implementation("androidx.room:room-runtime:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
+    ksp("androidx.room:room-compiler:2.6.1")
+
+    implementation("com.googlecode.libphonenumber:libphonenumber:8.13.52")
+
+    testImplementation("junit:junit:4.13.2")
 }

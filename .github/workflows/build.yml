@@ -1,4 +1,4 @@
-name: Build test app
+name: Build InTouch
 
 on:
   push:
@@ -18,33 +18,40 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
 
       - uses: gradle/actions/setup-gradle@v4
 
-      - name: Build the APK
+      - name: Run unit tests and build the APK
         run: |
           chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace
+          ./gradlew testDebugUnitTest assembleDebug --stacktrace
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: app/build/reports/tests/
 
       - name: Name the APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk InTouch-Lab.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk InTouch.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: InTouch-Lab
-          path: InTouch-Lab.apk
+          name: InTouch
+          path: InTouch.apk
 
-      - name: Publish to the "test-build" release
+      - name: Publish to the "latest" release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release delete test-build --yes --cleanup-tag || true
-          gh release create test-build InTouch-Lab.apk \
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest InTouch.apk \
             --target "${{ github.sha }}" \
             --prerelease \
-            --title "InTouch Lab - test build #${{ github.run_number }}" \
-            --notes "On your phone, download InTouch-Lab.apk below and open it to install. Built from ${{ github.sha }}."
+            --title "InTouch - build #${{ github.run_number }}" \
+            --notes "On your phone, download InTouch.apk below and open it to install. New builds install over the old one. Built from ${{ github.sha }}."

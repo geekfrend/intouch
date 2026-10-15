@@ -1,6 +1,215 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- All of InTouch's wording. Change copy here; no code changes needed. -->
 <resources>
-    <string name="app_name">InTouch Lab</string>
-    <string name="widget_label">InTouch Lab test</string>
-    <string name="widget_description">Test widget for phone and WhatsApp calls</string>
+    <string name="app_name">InTouch</string>
+
+    <!-- Common -->
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="close">Close</string>
+    <string name="back">Back</string>
+    <string name="more">More options</string>
+    <string name="edit">Edit</string>
+    <string name="archive">Archive</string>
+    <string name="unarchive">Unarchive</string>
+    <string name="delete">Delete</string>
+
+    <!-- Due list -->
+    <string name="add_person">Add someone</string>
+    <string name="empty_text">Add the people you want to stay in touch with, and InTouch will show you who\'s due for a call.</string>
+    <string name="empty_compact">No one added yet. Open your phone to add people.</string>
+    <string name="section_overdue">Overdue</string>
+    <string name="section_due_soon">Due soon</string>
+    <string name="section_on_track">On track</string>
+    <string name="summary_format">%1$d on track · %2$d overdue · %3$s</string>
+    <plurals name="calls_this_month">
+        <item quantity="one">%d call this month</item>
+        <item quantity="other">%d calls this month</item>
+    </plurals>
+
+    <!-- Status text -->
+    <plurals name="days_overdue">
+        <item quantity="one">%d day overdue</item>
+        <item quantity="other">%d days overdue</item>
+    </plurals>
+    <string name="due_today">Due today</string>
+    <string name="due_tomorrow">Due tomorrow</string>
+    <plurals name="due_in_days">
+        <item quantity="one">Due in %d day</item>
+        <item quantity="other">Due in %d days</item>
+    </plurals>
+    <string name="due_snoozed_until">Snoozed until %1$s</string>
+    <string name="next_due">next call by %1$s</string>
+    <string name="last_call_none">No calls yet</string>
+    <string name="last_call_format">Last call %1$s · %2$s</string>
+    <string name="ago_today">today</string>
+    <string name="ago_yesterday">yesterday</string>
+    <plurals name="ago_days">
+        <item quantity="one">%d day ago</item>
+        <item quantity="other">%d days ago</item>
+    </plurals>
+    <plurals name="ago_months">
+        <item quantity="one">%d month ago</item>
+        <item quantity="other">%d months ago</item>
+    </plurals>
+
+    <!-- Channels, directions, outcomes -->
+    <string name="channel_phone">Phone</string>
+    <string name="channel_whatsapp">WhatsApp</string>
+    <string name="channel_other">Other</string>
+    <string name="call_phone">Call</string>
+    <string name="call_whatsapp">WhatsApp</string>
+    <string name="direction_outgoing">Outgoing</string>
+    <string name="direction_incoming">Incoming</string>
+    <string name="direction_unknown">Call</string>
+    <string name="outcome_connected">Connected</string>
+    <string name="outcome_no_answer">No answer</string>
+    <string name="outcome_left_message">Left message</string>
+    <string name="outcome_skipped">Skipped</string>
+    <string name="source_call_history">from call history</string>
+    <string name="source_whatsapp">detected in WhatsApp</string>
+    <string name="source_prompt">you confirmed</string>
+    <string name="source_manual">logged by hand</string>
+
+    <!-- Frequency -->
+    <string name="freq_weekly">Weekly</string>
+    <string name="freq_two_weeks">Every 2 weeks</string>
+    <string name="freq_monthly">Monthly</string>
+    <string name="freq_quarterly">Quarterly</string>
+    <plurals name="freq_every_days">
+        <item quantity="one">Every day</item>
+        <item quantity="other">Every %d days</item>
+    </plurals>
+    <string name="freq_custom">Custom</string>
+    <string name="freq_custom_label">Every how many days?</string>
+    <string name="duration_seconds">%d s</string>
+    <string name="duration_minutes">%d min</string>
+    <string name="seconds_short">%d s</string>
+
+    <!-- Contact detail -->
+    <string name="detail_missing">This person isn\'t in your phone\'s contacts anymore.</string>
+    <string name="detail_relink">Relink to a contact</string>
+    <string name="action_log_call">Log a call</string>
+    <string name="action_snooze">Snooze</string>
+    <string name="action_cancel_snooze">End snooze</string>
+    <string name="action_skip">Skip this time</string>
+    <string name="action_phone_call">Phone call</string>
+    <string name="stats_title">How it\'s going</string>
+    <plurals name="stats_calls_90">
+        <item quantity="one">%d call in the last 90 days</item>
+        <item quantity="other">%d calls in the last 90 days</item>
+    </plurals>
+    <string name="stats_average_gap">Usually every %1$d days (goal: %2$d)</string>
+    <string name="stats_gap_none">Not enough calls yet to show a pattern</string>
+    <string name="history_title">Call log</string>
+    <string name="history_empty">No calls logged yet.</string>
+    <string name="entry_title_format">%1$s · %2$s</string>
+    <string name="entry_skipped">Skipped this time</string>
+    <string name="entry_not_real">not a real call</string>
+    <string name="entry_edit">Edit entry</string>
+    <string name="entry_mark_not_real">Not a real call</string>
+    <string name="entry_undo_not_real">Count this call again</string>
+
+    <!-- Add and edit -->
+    <string name="add_title">Add someone</string>
+    <string name="add_save">Start tracking</string>
+    <string name="edit_title">Edit</string>
+    <string name="edit_number">Number</string>
+    <string name="edit_frequency">How often do you want to talk?</string>
+    <string name="edit_channel">Usually call on</string>
+
+    <!-- Dialogs -->
+    <string name="log_title">Log a call</string>
+    <string name="log_direction">Who called?</string>
+    <string name="log_channel">On</string>
+    <string name="log_outcome">Result</string>
+    <string name="log_when">When</string>
+    <string name="snooze_title">Snooze until</string>
+    <plurals name="snooze_days">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
+    <string name="snooze_pick_date">Pick a date</string>
+    <string name="skip_title">Skip this time?</string>
+    <string name="skip_body">The timer for %1$s restarts today without counting as a call.</string>
+    <string name="delete_title">Stop tracking %1$s?</string>
+    <string name="delete_body">Their call log in InTouch is deleted too. Your phone\'s contacts aren\'t changed. To keep the history, archive instead.</string>
+    <string name="prompt_title">Did you connect with %1$s?</string>
+    <string name="prompt_body">InTouch couldn\'t tell if your WhatsApp call went through.</string>
+    <string name="prompt_yes">Yes</string>
+    <string name="prompt_no_answer">No answer</string>
+    <string name="prompt_left_message">Left message</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_wa_title">WhatsApp call detection</string>
+    <string name="settings_wa_body">Log WhatsApp calls with the people you track. InTouch only reads WhatsApp\'s call notifications, never your messages.</string>
+    <string name="settings_wa_needs_access">Needs notification access to work.</string>
+    <string name="settings_wa_last_none">No WhatsApp calls detected yet.</string>
+    <string name="settings_wa_last_tracked">Last detected: %1$s, with %2$s</string>
+    <string name="settings_wa_last_untracked">Last detected: %1$s, with someone you don\'t track</string>
+    <string name="restricted_hint">If the switch is greyed out: open App info, tap ⋮ in the top corner, choose \"Allow restricted settings\", then try again.</string>
+    <string name="open_notification_access">Turn on access</string>
+    <string name="open_app_info">App info</string>
+    <string name="settings_min_title">Shortest call that counts</string>
+    <string name="settings_min_body">Calls shorter than this don\'t reset the timer.</string>
+    <string name="settings_country_title">Default country code</string>
+    <string name="settings_background_title">Background refresh</string>
+    <string name="settings_background_body">Lets InTouch update your widget every few hours. If the widget falls behind, set InTouch to \"Unrestricted\" battery use.</string>
+    <string name="open_battery_settings">Battery settings</string>
+    <string name="settings_permissions_title">Permissions</string>
+    <string name="settings_permissions_open">Review permissions and setup</string>
+    <string name="settings_archived_title">Archived</string>
+    <string name="settings_backup_title">Backup</string>
+    <string name="settings_backup_body">Save everything to a file, or restore from one. Restoring replaces what\'s in InTouch now.</string>
+    <string name="export">Export</string>
+    <string name="import_label">Restore</string>
+    <string name="import_title">Restore from backup?</string>
+    <string name="import_body">Everything in InTouch now is replaced with the backup.</string>
+    <string name="settings_version">InTouch %1$s</string>
+
+    <!-- Setup -->
+    <string name="setup_title">Welcome to InTouch</string>
+    <string name="setup_intro">InTouch shows who you\'re due to call and logs your calls automatically. Everything stays on this phone.</string>
+    <string name="setup_permissions_title">Permissions</string>
+    <string name="setup_permissions_body">Contacts to pick people, call history to log phone calls, and phone to call in one tap.</string>
+    <string name="setup_perm_contacts">Contacts</string>
+    <string name="setup_perm_call_log">Call history</string>
+    <string name="setup_perm_phone">Phone calls</string>
+    <string name="setup_grant">Allow</string>
+    <string name="setup_wa_body">Turn on notification access so InTouch can log WhatsApp calls. It only reads WhatsApp\'s call notifications, never messages. You can turn this off in Settings.</string>
+    <string name="setup_wa_access">Notification access</string>
+    <string name="setup_battery_done">Unrestricted background use</string>
+    <string name="setup_done">Done</string>
+    <string name="setup_skip">Continue for now</string>
+
+    <!-- Messages -->
+    <string name="msg_whatsapp_missing">WhatsApp isn\'t installed.</string>
+    <string name="msg_call_failed">Couldn\'t start the call.</string>
+    <string name="msg_contact_unreadable">Couldn\'t read that contact.</string>
+    <string name="msg_no_number">That contact has no phone number.</string>
+    <string name="msg_contacts_permission">InTouch needs contacts access to add people.</string>
+    <string name="msg_archived">Archived. Find it in Settings.</string>
+    <string name="msg_saved">Saved</string>
+    <string name="msg_exported">Backup saved</string>
+    <string name="msg_export_failed">Couldn\'t save the backup.</string>
+    <string name="msg_import_failed">That file isn\'t an InTouch backup.</string>
+    <plurals name="msg_imported">
+        <item quantity="one">Restored %d person</item>
+        <item quantity="other">Restored %d people</item>
+    </plurals>
+
+    <!-- Widgets -->
+    <string name="widget_label">InTouch</string>
+    <string name="widget_cover_label">InTouch (cover screen)</string>
+    <string name="widget_description">Who you\'re due to call</string>
+    <string name="widget_empty">Everyone\'s on track</string>
+    <plurals name="widget_overdue">
+        <item quantity="one">%d overdue</item>
+        <item quantity="other">%d overdue</item>
+    </plurals>
+    <plurals name="widget_due_soon">
+        <item quantity="one">%d due soon</item>
+        <item quantity="other">%d due soon</item>
+    </plurals>
 </resources>

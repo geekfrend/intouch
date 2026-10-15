@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget and window colors (dark mode). -->
+<resources>
+    <color name="window_bg">#0F1513</color>
+
+    <color name="widget_bg">#F21A211F</color>
+    <color name="widget_text">#DEE4E1</color>
+    <color name="widget_text_secondary">#BEC9C4</color>
+    <color name="widget_overdue">#FFB4AB</color>
+    <color name="widget_due_soon">#FFB95C</color>
+    <color name="widget_button_bg">#0F5244</color>
+    <color name="widget_button_text">#B2EFDC</color>
+</resources>
