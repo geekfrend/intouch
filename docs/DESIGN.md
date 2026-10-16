@@ -56,9 +56,16 @@ Screens never hard-code a color, font size or spacing value; they read `Material
 The cover screen layout switches on below 480 dp of screen height (`COMPACT_MAX_HEIGHT_DP` in
 `InTouchNav.kt`).
 
+## Row E (built in #9)
+
+- Add / Edit: labelled number options, frequency and channel tiles, a "When did you last talk?" panel.
+- Settings and Setup: panels, cyan switches, a segmented shortest-call picker, diamond status lines and a
+  permission checklist with an Allow button per row.
+- Log a call and Snooze are bottom sheets with big tiles.
+- Widgets: home rows carry 5-segment signal bars; the cover screen has its own layout (`widget_cover_due.xml`)
+  with card rows that turn pink when overdue and one icon button each. Widgets use the system sans-serif with
+  letter spacing, since custom fonts in RemoteViews aren't reliable across launchers.
+
 ## Still to design
 
-- Add / Edit, Settings, Setup and the dialogs use the new colors and type through the theme, but keep
-  Material's rounded buttons; they haven't had a dedicated layout pass yet.
-- The widget uses the new colors but the system font, and plain rows rather than signal bars.
 - The app icon is still a placeholder phone glyph (now cyan on night).
