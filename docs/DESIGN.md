@@ -1,15 +1,30 @@
 # Design hand-off notes
 
-v1 ships with a plain, functional Material 3 look on purpose. The code is set up so a visual design
-can be applied later without touching how the app works.
+The look is **"Drifter × Monument"** (chosen Oct 16 from the redesign canvas): Drifter's always-dark
+palette and signal-tile layout, with Monument's typography. The code keeps the look separate from
+how the app works, so it can keep changing.
+
+| Token | Value | Use |
+| --- | --- | --- |
+| Night | `#110E24` | Background |
+| Panel | `#1B1736` | Tiles, panels, dialogs |
+| Line / Line strong | `#2C2650` / `#3A3368` | Borders, unlit signal segments |
+| Text / Muted | `#EEE8FF` / `#A49CC8` | Text |
+| Signal | `#43E5D6` | Strong signal, main buttons |
+| Fading | `#FF5C9E` | Overdue |
+| Soon | `#FFC65C` | Due soon |
+| Josefin Sans | Light 300 to Bold 700 | Headings, names, numbers, spaced-capital labels |
+| Nunito Sans | 400 to 700 | Body text |
+
+Fonts are downloaded at build time by `scripts/fetch-fonts.sh` (SIL Open Font License).
 
 ## Where the look lives
 
 | What | File |
 | --- | --- |
-| Colors (light and dark), status colors, type, shapes, spacing, avatar sizes | `app/src/main/java/com/geekfrend/intouch/ui/theme/Theme.kt` |
-| Widget colors (light) | `app/src/main/res/values/colors.xml` |
-| Widget colors (dark) | `app/src/main/res/values-night/colors.xml` |
+| Colors, status colors, type, shapes, spacing, sizes | `app/src/main/java/com/geekfrend/intouch/ui/theme/Theme.kt` |
+| Widget, window and launcher colors | `app/src/main/res/values/colors.xml` |
+| Line icons | `app/src/main/res/drawable/ic_*.xml` |
 | Widget layout | `app/src/main/res/layout/widget_due.xml`, `res/drawable/widget_*.xml` |
 | App icon | `app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml`, `res/drawable/ic_launcher_foreground.xml` |
 | All wording | `app/src/main/res/values/strings.xml` |
@@ -41,9 +56,9 @@ Screens never hard-code a color, font size or spacing value; they read `Material
 The cover screen layout switches on below 480 dp of screen height (`COMPACT_MAX_HEIGHT_DP` in
 `InTouchNav.kt`).
 
-## Known v1 design gaps
+## Still to design
 
-- Call buttons use text labels ("WhatsApp", "Call", "Text"); icons are left for the design pass.
-- Due-list rows show the preferred channel as a button and the other two in a ⋮ menu, to leave room for the name.
-- Typography and shapes are Material defaults.
-- The app icon is a placeholder phone glyph.
+- Add / Edit, Settings, Setup and the dialogs use the new colors and type through the theme, but keep
+  Material's rounded buttons; they haven't had a dedicated layout pass yet.
+- The widget uses the new colors but the system font, and plain rows rather than signal bars.
+- The app icon is still a placeholder phone glyph (now cyan on night).
