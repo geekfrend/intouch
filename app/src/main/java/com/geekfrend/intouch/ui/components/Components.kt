@@ -2,8 +2,11 @@ package com.geekfrend.intouch.ui.components
 
 import android.graphics.BitmapFactory
 import android.net.Uri
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,44 +16,46 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.stringResource
-import com.geekfrend.intouch.R
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.geekfrend.intouch.R
 import com.geekfrend.intouch.data.Channel
 import com.geekfrend.intouch.data.DueItem
+import com.geekfrend.intouch.domain.ContactStatus
 import com.geekfrend.intouch.domain.DueState
 import com.geekfrend.intouch.ui.Format
 import com.geekfrend.intouch.ui.theme.InTouchTheme
@@ -58,9 +63,21 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /*
- * Reusable building blocks. Each one takes plain data and callbacks and holds no app state,
- * so the visual design can restyle them freely.
+ * Reusable building blocks for the "Drifter × Monument" look. Each takes plain data and callbacks
+ * and holds no app state.
  */
+
+/** The ways to reach someone, in button order. */
+val REACH_CHANNELS = listOf(Channel.WHATSAPP, Channel.PHONE, Channel.TEXT)
+
+fun otherChannels(c: Channel): List<Channel> = REACH_CHANNELS - c
+
+@DrawableRes
+fun channelIcon(c: Channel): Int = when (c) {
+    Channel.WHATSAPP -> R.drawable.ic_whatsapp
+    Channel.TEXT -> R.drawable.ic_text
+    else -> R.drawable.ic_call
+}
 
 @Composable
 fun statusColor(state: DueState): Color = when (state) {
@@ -69,15 +86,240 @@ fun statusColor(state: DueState): Color = when (state) {
     DueState.ON_TRACK -> InTouchTheme.status.onTrack
 }
 
-/** The ways to reach someone, in button order. */
-val REACH_CHANNELS = listOf(Channel.WHATSAPP, Channel.PHONE, Channel.TEXT)
+/**
+ * Signal strength from 1 (weakest) to 5. Overdue: 1, or 2 when only a day late. Due soon: 3.
+ * On track: 5 in the first half of the rhythm, 4 after.
+ */
+fun signalLevel(s: ContactStatus, frequencyDays: Int): Int = when (s.state) {
+    DueState.OVERDUE -> if (s.daysUntilDue >= -1) 2 else 1
+    DueState.DUE_SOON -> 3
+    DueState.ON_TRACK -> if (s.snoozedUntil != null || s.daysUntilDue * 2 >= frequencyDays) 5 else 4
+}
 
-fun otherChannels(c: Channel): List<Channel> = REACH_CHANNELS - c
+/** Flat segmented bar; [ascending] makes each segment taller than the last (the contact page meter). */
+@Composable
+fun SignalBar(
+    level: Int,
+    color: Color,
+    modifier: Modifier = Modifier,
+    segments: Int = 5,
+    ascending: Boolean = false,
+    height: Dp = 6.dp,
+) {
+    val off = InTouchTheme.colors.line
+    Row(
+        modifier = modifier.semantics { contentDescription = "Signal $level of $segments" },
+        horizontalArrangement = Arrangement.spacedBy(if (ascending) 5.dp else 4.dp),
+        verticalAlignment = Alignment.Bottom,
+    ) {
+        for (i in 0 until segments) {
+            val h = if (ascending) height * (0.25f + 0.75f * (i + 1) / segments) else height
+            Box(
+                Modifier
+                    .weight(1f)
+                    .height(h)
+                    .background(if (i < level) color else off)
+            )
+        }
+    }
+}
 
-/** Contact photo from the address book, or initials. */
+/** Spaced-capital label, e.g. "SIGNAL · WEAKEST FIRST". */
+@Composable
+fun Label(text: String, modifier: Modifier = Modifier, color: Color = InTouchTheme.colors.muted) {
+    Text(text.uppercase(), style = MaterialTheme.typography.labelMedium, color = color, modifier = modifier)
+}
+
+/** Square-cornered icon button with a panel background (header buttons). */
+@Composable
+fun SquareIconButton(@DrawableRes icon: Int, description: String, onClick: () -> Unit) {
+    val c = InTouchTheme.colors
+    Box(
+        modifier = Modifier
+            .size(44.dp)
+            .clip(RoundedCornerShape(InTouchTheme.sizes.buttonCorner))
+            .background(c.panel)
+            .border(1.dp, c.line, RoundedCornerShape(InTouchTheme.sizes.buttonCorner))
+            .clickable(onClickLabel = description, onClick = onClick)
+            .semantics { contentDescription = description },
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(painterResource(icon), contentDescription = null, tint = c.text, modifier = Modifier.size(20.dp))
+    }
+}
+
+/** The main call button: filled signal color. */
+@Composable
+fun SignalButton(
+    text: String,
+    @DrawableRes icon: Int?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    height: Dp = 48.dp,
+) {
+    val c = InTouchTheme.colors
+    Button(
+        onClick = onClick,
+        modifier = modifier.height(height),
+        shape = RoundedCornerShape(InTouchTheme.sizes.buttonCorner),
+        colors = ButtonDefaults.buttonColors(containerColor = c.signal, contentColor = c.night),
+        contentPadding = PaddingValues(horizontal = 12.dp),
+    ) {
+        if (icon != null) {
+            Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+        }
+        Text(text, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+/** Secondary button: outlined, transparent. */
+@Composable
+fun GhostButton(
+    text: String,
+    @DrawableRes icon: Int?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    height: Dp = 44.dp,
+) {
+    val c = InTouchTheme.colors
+    OutlinedButton(
+        onClick = onClick,
+        modifier = modifier.height(height),
+        shape = RoundedCornerShape(InTouchTheme.sizes.buttonCorner),
+        border = BorderStroke(1.dp, c.lineStrong),
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = c.text),
+        contentPadding = PaddingValues(horizontal = 12.dp),
+    ) {
+        if (icon != null) {
+            Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+        }
+        Text(text, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+/** A small panel button with a spaced-capital label (LOG / SNOOZE / SKIP). */
+@Composable
+fun PanelButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val c = InTouchTheme.colors
+    Box(
+        modifier = modifier
+            .height(44.dp)
+            .clip(RoundedCornerShape(InTouchTheme.sizes.buttonCorner))
+            .background(c.panel)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(text.uppercase(), style = MaterialTheme.typography.labelMedium, color = c.text)
+    }
+}
+
+/** A dashed-outline button (Add someone). */
+@Composable
+fun DashedButton(text: String, @DrawableRes icon: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val c = InTouchTheme.colors
+    val corner = InTouchTheme.sizes.corner
+    Row(
+        modifier = modifier
+            .height(52.dp)
+            .clip(RoundedCornerShape(corner))
+            .drawBehind {
+                drawRoundRect(
+                    color = c.lineStrong,
+                    style = Stroke(width = 1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 8f))),
+                    cornerRadius = CornerRadius(corner.toPx()),
+                )
+            }
+            .clickable(onClick = onClick),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(painterResource(icon), contentDescription = null, tint = c.text, modifier = Modifier.size(16.dp))
+        Spacer(Modifier.width(10.dp))
+        Text(text.uppercase(), style = MaterialTheme.typography.labelMedium, color = c.text)
+    }
+}
+
+/** A counter in the summary strip: big light number over a spaced label. */
+@Composable
+fun Counter(value: Int, label: String, color: Color, modifier: Modifier = Modifier) {
+    val c = InTouchTheme.colors
+    Column(
+        modifier = modifier
+            .clip(RoundedCornerShape(4.dp))
+            .background(c.panel)
+            .border(1.dp, c.line, RoundedCornerShape(4.dp))
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(value.toString(), style = MaterialTheme.typography.displaySmall, color = color)
+        Label(label)
+    }
+}
+
+/**
+ * One person on the home screen: name, signal bar, status and a call button for their usual
+ * channel. Fading people get a glowing magenta outline and a filled button.
+ */
+@Composable
+fun ContactTile(item: DueItem, compact: Boolean, onOpen: () -> Unit, onCall: (Channel) -> Unit) {
+    val res = LocalContext.current.resources
+    val c = InTouchTheme.colors
+    val sizes = InTouchTheme.sizes
+    val shape = RoundedCornerShape(sizes.corner)
+    val contact = item.contact
+    val fading = item.status.state == DueState.OVERDUE
+    val color = statusColor(item.status.state)
+    val statusText = if (item.status.state == DueState.ON_TRACK && item.status.snoozedUntil == null && item.status.lastConnectedAt != null) {
+        Format.lastCallShort(res, item.status)
+    } else {
+        Format.due(res, item.status)
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(if (compact) sizes.tileHeightCompact else sizes.tileHeight)
+            .then(if (fading) Modifier.shadow(14.dp, shape, ambientColor = c.fading, spotColor = c.fading) else Modifier)
+            .clip(shape)
+            .background(c.panel)
+            .border(1.dp, if (fading) c.fading else c.line, shape)
+            .clickable(onClick = onOpen)
+            .padding(14.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        Text(
+            contact.displayName,
+            style = MaterialTheme.typography.titleMedium,
+            color = c.text,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        SignalBar(signalLevel(item.status, contact.frequencyDays), color, Modifier.fillMaxWidth())
+        Text(
+            statusText,
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = if (item.status.state == DueState.ON_TRACK) FontWeight.Normal else FontWeight.Bold,
+            color = if (item.status.state == DueState.ON_TRACK) c.muted else color,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Spacer(Modifier.weight(1f))
+        val label = Format.channel(res, contact.preferredChannel)
+        if (fading) {
+            SignalButton(label, channelIcon(contact.preferredChannel), { onCall(contact.preferredChannel) }, Modifier.fillMaxWidth(), height = 40.dp)
+        } else {
+            GhostButton(label, channelIcon(contact.preferredChannel), { onCall(contact.preferredChannel) }, Modifier.fillMaxWidth(), height = 40.dp)
+        }
+    }
+}
+
+/** Contact photo from the address book, or initials (used on the add and edit screens). */
 @Composable
 fun Avatar(name: String, photoUri: String?, size: Dp) {
     val context = LocalContext.current
+    val c = InTouchTheme.colors
     val bitmap by produceState<ImageBitmap?>(initialValue = null, photoUri) {
         value = photoUri?.let { uri ->
             withContext(Dispatchers.IO) {
@@ -90,110 +332,24 @@ fun Avatar(name: String, photoUri: String?, size: Dp) {
         }
     }
     Box(
-        modifier = Modifier.size(size).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer),
+        modifier = Modifier
+            .size(size)
+            .clip(CircleShape)
+            .background(c.panel)
+            .border(1.dp, c.lineStrong, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
         val b = bitmap
         if (b != null) {
             Image(bitmap = b, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
         } else {
-            Text(
-                text = initials(name),
-                style = if (size >= 56.dp) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-            )
+            Text(initials(name), style = MaterialTheme.typography.titleMedium, color = c.text)
         }
     }
 }
 
 private fun initials(name: String): String =
     name.split(' ').filter { it.isNotBlank() }.take(2).joinToString("") { it.first().uppercase() }.ifEmpty { "?" }
-
-/** One person in the due list. On the cover screen ([compact]) it drops the photo and second button. */
-@Composable
-fun DueRow(item: DueItem, compact: Boolean, onOpen: () -> Unit, onCall: (Channel) -> Unit) {
-    val res = LocalContext.current.resources
-    val spacing = InTouchTheme.spacing
-    val c = item.contact
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onOpen)
-            .padding(horizontal = spacing.l, vertical = if (compact) spacing.s else spacing.m),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (!compact) {
-            Avatar(c.displayName, c.photoUri, InTouchTheme.sizes.avatarSmall)
-            Spacer(Modifier.width(spacing.m))
-        }
-        Column(Modifier.weight(1f)) {
-            Text(c.displayName, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(
-                Format.due(res, item.status),
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
-                color = statusColor(item.status.state),
-                maxLines = 1,
-            )
-            if (!compact) {
-                Text(
-                    Format.lastCall(res, item.status),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        }
-        Spacer(Modifier.width(spacing.s))
-        FilledTonalButton(onClick = { onCall(c.preferredChannel) }, contentPadding = PaddingValues(horizontal = spacing.m)) {
-            Text(Format.callLabel(res, c.preferredChannel))
-        }
-        if (!compact) {
-            // The other ways to reach them, in a menu so the row keeps room for the name.
-            var menuOpen by remember { mutableStateOf(false) }
-            Box {
-                IconButton(onClick = { menuOpen = true }) {
-                    Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.more_ways))
-                }
-                DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                    otherChannels(c.preferredChannel).forEach { ch ->
-                        DropdownMenuItem(
-                            text = { Text(Format.callLabel(res, ch)) },
-                            onClick = {
-                                menuOpen = false
-                                onCall(ch)
-                            },
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun SectionHeader(title: String, count: Int, state: DueState) {
-    val spacing = InTouchTheme.spacing
-    Text(
-        text = "$title · $count",
-        style = MaterialTheme.typography.labelLarge,
-        color = statusColor(state),
-        modifier = Modifier.padding(start = spacing.l, end = spacing.l, top = spacing.l, bottom = spacing.xs),
-    )
-}
-
-/** WhatsApp, Call and Text buttons, the preferred one filled and first. */
-@Composable
-fun CallButtons(preferred: Channel, onCall: (Channel) -> Unit) {
-    val res = LocalContext.current.resources
-    Row(horizontalArrangement = Arrangement.spacedBy(InTouchTheme.spacing.s), modifier = Modifier.fillMaxWidth()) {
-        Button(onClick = { onCall(preferred) }, modifier = Modifier.weight(1f)) { Text(Format.callLabel(res, preferred), maxLines = 1) }
-        otherChannels(preferred).forEach { ch ->
-            OutlinedButton(onClick = { onCall(ch) }, modifier = Modifier.weight(1f)) { Text(Format.callLabel(res, ch), maxLines = 1) }
-        }
-    }
-}
 
 @Composable
 fun EmptyState(text: String, buttonLabel: String?, onClick: () -> Unit, modifier: Modifier = Modifier) {
@@ -203,10 +359,10 @@ fun EmptyState(text: String, buttonLabel: String?, onClick: () -> Unit, modifier
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(text, style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center)
+        Text(text, style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center, color = InTouchTheme.colors.text)
         if (buttonLabel != null) {
             Spacer(Modifier.size(spacing.l))
-            Button(onClick = onClick) { Text(buttonLabel) }
+            DashedButton(buttonLabel, R.drawable.ic_add, onClick, Modifier.fillMaxWidth())
         }
     }
 }

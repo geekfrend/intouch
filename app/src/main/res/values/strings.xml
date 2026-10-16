@@ -236,4 +236,20 @@
         <item quantity="one">%d due soon</item>
         <item quantity="other">%d due soon</item>
     </plurals>
+    <!-- Drifter × Monument redesign -->
+    <string name="summary_fading">Fading</string>
+    <string name="summary_soon">Soon</string>
+    <string name="summary_strong">Strong</string>
+    <string name="home_label">Signal · weakest first</string>
+    <string name="detail_signal">Signal</string>
+    <string name="signal_weak">Weak</string>
+    <string name="signal_fair">Fair</string>
+    <string name="signal_strong">Strong</string>
+    <string name="detail_rhythm">Usually every %1$d days</string>
+    <string name="reach_format">%1$s %2$s</string>
+    <string name="action_log_short">Log</string>
+    <string name="action_skip_short">Skip</string>
+    <string name="last_call_short">Talked %1$s</string>
+    <string name="log_sent">sent</string>
+    <string name="log_received">received</string>
 </resources>

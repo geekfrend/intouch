@@ -43,6 +43,29 @@ object Format {
         return res.getString(R.string.last_call_format, ago(res, at), channel(res, s.lastConnectedChannel))
     }
 
+    /** "Talked 2 days ago" for on-track tiles. */
+    fun lastCallShort(res: Resources, s: ContactStatus): String {
+        val at = s.lastConnectedAt ?: return res.getString(R.string.last_call_none)
+        return res.getString(R.string.last_call_short, ago(res, at))
+    }
+
+    /** "SEP 28"-style date for the log (the label style uppercases it). */
+    fun shortDate(t: Long): String =
+        Instant.ofEpochMilli(t).atZone(zone).format(DateTimeFormatter.ofPattern("MMM d"))
+
+    /** "WhatsApp · incoming", "Text · sent", "Phone · no answer", "Skipped this time". */
+    fun logLine(res: Resources, i: Interaction): String {
+        if (i.outcome == Outcome.SKIPPED) return res.getString(R.string.entry_skipped)
+        val what = when {
+            i.outcome != Outcome.CONNECTED -> outcome(res, i.outcome).lowercase()
+            i.channel == Channel.TEXT && i.direction == Direction.OUTGOING -> res.getString(R.string.log_sent)
+            i.channel == Channel.TEXT && i.direction == Direction.INCOMING -> res.getString(R.string.log_received)
+            i.direction == Direction.UNKNOWN -> null
+            else -> direction(res, i.direction).lowercase()
+        }
+        return listOfNotNull(channel(res, i.channel), what).joinToString(" · ")
+    }
+
     fun ago(res: Resources, time: Long): String {
         val days = ChronoUnit.DAYS.between(localDate(time), LocalDate.now()).toInt()
         return when {

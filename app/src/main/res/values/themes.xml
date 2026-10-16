@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Only the window behind the Compose UI. The app's real theme is ui/theme/Theme.kt. -->
-    <style name="Theme.InTouch" parent="android:Theme.Material.Light.NoActionBar">
+    <!-- Only the window behind the Compose UI and the system date/time pickers. The app's real theme is ui/theme/Theme.kt. -->
+    <style name="Theme.InTouch" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">@color/window_bg</item>
+        <item name="android:colorAccent">#43E5D6</item>
+        <item name="android:colorBackground">#1B1736</item>
     </style>
 </resources>

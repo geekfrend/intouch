@@ -1,44 +1,51 @@
 package com.geekfrend.intouch.ui.screens
 
-import androidx.annotation.StringRes
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListScope
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.geekfrend.intouch.R
 import com.geekfrend.intouch.data.Channel
-import com.geekfrend.intouch.data.DueItem
 import com.geekfrend.intouch.data.DueOverview
 import com.geekfrend.intouch.data.TrackedContact
-import com.geekfrend.intouch.domain.DueState
-import com.geekfrend.intouch.ui.Format
-import com.geekfrend.intouch.ui.components.DueRow
+import com.geekfrend.intouch.ui.components.ContactTile
+import com.geekfrend.intouch.ui.components.Counter
+import com.geekfrend.intouch.ui.components.DashedButton
 import com.geekfrend.intouch.ui.components.EmptyState
-import com.geekfrend.intouch.ui.components.SectionHeader
+import com.geekfrend.intouch.ui.components.Label
+import com.geekfrend.intouch.ui.components.SquareIconButton
 import com.geekfrend.intouch.ui.theme.InTouchTheme
 
-/** FR-6 and FR-18: the app's main screen. */
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * FR-6 and FR-18: the home screen. A summary strip (fading / soon / strong), then everyone as
+ * signal tiles, weakest first. On the Flip cover screen ([compact]) the summary is hidden.
+ */
 @Composable
 fun DueListScreen(
     overview: DueOverview?,
@@ -49,74 +56,87 @@ fun DueListScreen(
     onCall: (TrackedContact, Channel) -> Unit,
     onSettings: () -> Unit,
 ) {
-    val res = LocalContext.current.resources
+    val c = InTouchTheme.colors
     val spacing = InTouchTheme.spacing
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.app_name)) },
-                actions = {
-                    IconButton(onClick = onSettings) {
-                        Icon(Icons.Filled.Settings, contentDescription = stringResource(R.string.settings_title))
-                    }
-                },
-            )
-        },
-        floatingActionButton = {
-            if (!compact) {
-                FloatingActionButton(onClick = onAdd) {
-                    Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_person))
-                }
-            }
-        },
+        containerColor = c.night,
         snackbarHost = { SnackbarHost(snackbar) },
     ) { padding ->
-        when {
-            overview == null -> Box(Modifier.fillMaxSize().padding(padding))
-            overview.isEmpty -> EmptyState(
-                text = stringResource(if (compact) R.string.empty_compact else R.string.empty_text),
-                buttonLabel = if (compact) null else stringResource(R.string.add_person),
-                onClick = onAdd,
-                modifier = Modifier.padding(padding),
-            )
-            else -> LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                contentPadding = PaddingValues(bottom = if (compact) spacing.l else InTouchTheme.sizes.listBottomPadding),
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(horizontal = 20.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().height(if (compact) 52.dp else 64.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
+                Box(
+                    Modifier
+                        .size(13.dp)
+                        .rotate(45f)
+                        .shadow(10.dp, ambientColor = c.signal, spotColor = c.signal)
+                        .background(c.signal)
+                )
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    stringResource(R.string.app_name).uppercase(),
+                    style = MaterialTheme.typography.titleLarge.copy(letterSpacing = MaterialTheme.typography.labelMedium.letterSpacing * 1.5f),
+                    color = c.text,
+                    modifier = Modifier.weight(1f),
+                )
                 if (!compact) {
-                    item(key = "summary") {
-                        Text(
-                            Format.summary(res, overview.summary),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = spacing.l, vertical = spacing.s),
-                        )
+                    SquareIconButton(R.drawable.ic_add, stringResource(R.string.add_person), onAdd)
+                    Spacer(Modifier.width(8.dp))
+                }
+                SquareIconButton(R.drawable.ic_settings, stringResource(R.string.settings_title), onSettings)
+            }
+
+            when {
+                overview == null -> Box(Modifier.fillMaxSize())
+                overview.isEmpty -> EmptyState(
+                    text = stringResource(if (compact) R.string.empty_compact else R.string.empty_text),
+                    buttonLabel = if (compact) null else stringResource(R.string.add_person),
+                    onClick = onAdd,
+                )
+                else -> {
+                    val everyone = overview.overdue + overview.dueSoon + overview.onTrack
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        contentPadding = PaddingValues(top = 8.dp, bottom = spacing.xl),
+                    ) {
+                        if (!compact) {
+                            item(key = "summary", span = { GridItemSpan(maxLineSpan) }) {
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Counter(overview.overdue.size, stringResource(R.string.summary_fading), InTouchTheme.status.overdue, Modifier.weight(1f))
+                                    Counter(overview.dueSoon.size, stringResource(R.string.summary_soon), InTouchTheme.status.dueSoon, Modifier.weight(1f))
+                                    Counter(overview.onTrack.size, stringResource(R.string.summary_strong), InTouchTheme.status.onTrack, Modifier.weight(1f))
+                                }
+                            }
+                            item(key = "label", span = { GridItemSpan(maxLineSpan) }) {
+                                Label(stringResource(R.string.home_label), Modifier.padding(top = 8.dp))
+                            }
+                        }
+                        items(everyone, key = { it.contact.id }) { item ->
+                            ContactTile(
+                                item = item,
+                                compact = compact,
+                                onOpen = { onOpen(item.contact.id) },
+                                onCall = { ch -> onCall(item.contact, ch) },
+                            )
+                        }
+                        if (!compact) {
+                            item(key = "add", span = { GridItemSpan(maxLineSpan) }) {
+                                DashedButton(stringResource(R.string.add_person), R.drawable.ic_add, onAdd, Modifier.fillMaxWidth().padding(top = 4.dp))
+                            }
+                        }
                     }
                 }
-                section(R.string.section_overdue, overview.overdue, DueState.OVERDUE, compact, onOpen, onCall)
-                section(R.string.section_due_soon, overview.dueSoon, DueState.DUE_SOON, compact, onOpen, onCall)
-                section(R.string.section_on_track, overview.onTrack, DueState.ON_TRACK, compact, onOpen, onCall)
             }
         }
-    }
-}
-
-private fun LazyListScope.section(
-    @StringRes title: Int,
-    list: List<DueItem>,
-    state: DueState,
-    compact: Boolean,
-    onOpen: (String) -> Unit,
-    onCall: (TrackedContact, Channel) -> Unit,
-) {
-    if (list.isEmpty()) return
-    item(key = "header-$state") { SectionHeader(stringResource(title), list.size, state) }
-    items(list, key = { it.contact.id }) { item ->
-        DueRow(
-            item = item,
-            compact = compact,
-            onOpen = { onOpen(item.contact.id) },
-            onCall = { channel -> onCall(item.contact, channel) },
-        )
     }
 }

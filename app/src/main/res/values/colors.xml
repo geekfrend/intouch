@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Widget and window colors (light). Widgets can't use the Compose theme, so they read these. -->
+<!-- Widget, window and icon colors ("Drifter × Monument"). Widgets can't use the Compose theme, so they read these.
+     Keep in step with ui/theme/Theme.kt. The app is always dark, so there is no night variant. -->
 <resources>
-    <color name="ic_bg">#2E6B5C</color>
-    <color name="window_bg">#F7FAF8</color>
+    <color name="ic_bg">#110E24</color>
+    <color name="ic_fg">#43E5D6</color>
+    <color name="window_bg">#110E24</color>
 
-    <color name="widget_bg">#F2F7FAF8</color>
-    <color name="widget_text">#181C1B</color>
-    <color name="widget_text_secondary">#3F4945</color>
-    <color name="widget_overdue">#BA1A1A</color>
-    <color name="widget_due_soon">#8A5300</color>
-    <color name="widget_button_bg">#B2EFDC</color>
-    <color name="widget_button_text">#00201A</color>
+    <color name="widget_bg">#F21B1736</color>
+    <color name="widget_border">#2C2650</color>
+    <color name="widget_text">#EEE8FF</color>
+    <color name="widget_text_secondary">#A49CC8</color>
+    <color name="widget_overdue">#FF5C9E</color>
+    <color name="widget_due_soon">#FFC65C</color>
+    <color name="widget_button_bg">#43E5D6</color>
+    <color name="widget_button_text">#110E24</color>
 </resources>
