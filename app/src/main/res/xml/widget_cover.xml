@@ -2,7 +2,7 @@
 <!-- Same widget, registered for the Flip cover screen. Categories match the setup tested on the Flip 6. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/widget_description"
-    android:initialLayout="@layout/widget_due"
+    android:initialLayout="@layout/widget_cover_due"
     android:minWidth="180dp"
     android:minHeight="110dp"
     android:resizeMode="horizontal|vertical"

@@ -21,6 +21,7 @@ import com.geekfrend.intouch.data.TrackedContact
 import com.geekfrend.intouch.device.CallLauncher
 import com.geekfrend.intouch.domain.DueState
 import com.geekfrend.intouch.ui.Format
+import com.geekfrend.intouch.ui.components.signalLevel
 import com.geekfrend.intouch.work.SyncWork
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -62,7 +63,7 @@ abstract class DueWidget : AppWidgetProvider() {
 
 /**
  * Draws both widgets. Built with RemoteViews, the approach tested on the Flip 6 cover screen.
- * Colors and sizes come from res/values/colors.xml and res/layout/widget_due.xml.
+ * Colors come from res/values/colors.xml; layouts are widget_due.xml (home) and widget_cover_due.xml (cover).
  */
 object WidgetUpdater {
     /** Display ID of the Flip's cover screen, per Samsung's Flex Window guide (tested Oct 15). */
@@ -74,6 +75,16 @@ object WidgetUpdater {
     private val NAMES = intArrayOf(R.id.name_1, R.id.name_2, R.id.name_3, R.id.name_4, R.id.name_5, R.id.name_6)
     private val STATUSES = intArrayOf(R.id.status_1, R.id.status_2, R.id.status_3, R.id.status_4, R.id.status_5, R.id.status_6)
     private val BUTTONS = intArrayOf(R.id.button_1, R.id.button_2, R.id.button_3, R.id.button_4, R.id.button_5, R.id.button_6)
+    private val BUTTON_ICONS = intArrayOf(R.id.button_icon_1, R.id.button_icon_2, R.id.button_icon_3, R.id.button_icon_4, R.id.button_icon_5, R.id.button_icon_6)
+    private val BUTTON_TEXTS = intArrayOf(R.id.button_text_1, R.id.button_text_2, R.id.button_text_3, R.id.button_text_4, R.id.button_text_5, R.id.button_text_6)
+    private val SEGMENTS = arrayOf(
+        intArrayOf(R.id.seg_1_1, R.id.seg_1_2, R.id.seg_1_3, R.id.seg_1_4, R.id.seg_1_5),
+        intArrayOf(R.id.seg_2_1, R.id.seg_2_2, R.id.seg_2_3, R.id.seg_2_4, R.id.seg_2_5),
+        intArrayOf(R.id.seg_3_1, R.id.seg_3_2, R.id.seg_3_3, R.id.seg_3_4, R.id.seg_3_5),
+        intArrayOf(R.id.seg_4_1, R.id.seg_4_2, R.id.seg_4_3, R.id.seg_4_4, R.id.seg_4_5),
+        intArrayOf(R.id.seg_5_1, R.id.seg_5_2, R.id.seg_5_3, R.id.seg_5_4, R.id.seg_5_5),
+        intArrayOf(R.id.seg_6_1, R.id.seg_6_2, R.id.seg_6_3, R.id.seg_6_4, R.id.seg_6_5),
+    )
 
     suspend fun refresh(context: Context) {
         refresh(context, context.app.repository.currentOverview())
@@ -100,11 +111,12 @@ object WidgetUpdater {
         region: String,
     ): RemoteViews {
         val res = context.resources
-        val views = RemoteViews(context.packageName, R.layout.widget_due)
+        val views = RemoteViews(context.packageName, if (cover) R.layout.widget_cover_due else R.layout.widget_due)
 
         val height = manager.getAppWidgetOptions(widgetId).getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 0)
         val maxRows = if (cover) 3 else 6
-        val fits = if (height <= 0) maxRows else ((height - 56) / 56).coerceIn(1, maxRows)
+        val rowHeight = if (cover) 74 else 56
+        val fits = if (height <= 0) maxRows else ((height - 48) / rowHeight).coerceIn(1, maxRows)
         val shown = due.take(fits)
 
         val subtitle = when {
@@ -113,25 +125,58 @@ object WidgetUpdater {
             else -> ""
         }
         views.setTextViewText(R.id.widget_subtitle, subtitle)
+        if (!cover) {
+            val subColor = if (overview.overdue.isNotEmpty()) R.color.widget_overdue else R.color.widget_due_soon
+            views.setTextColor(R.id.widget_subtitle, color(context, subColor))
+        }
         views.setOnClickPendingIntent(R.id.widget_header, openApp(context, widgetId * 20 + 19, null, cover))
         views.setViewVisibility(R.id.widget_empty, if (shown.isEmpty()) View.VISIBLE else View.GONE)
 
-        for (i in ROWS.indices) {
+        for (i in 0 until maxRows) {
             if (i >= shown.size) {
                 views.setViewVisibility(ROWS[i], View.GONE)
                 continue
             }
             val item = shown[i]
-            val color = if (item.status.state == DueState.OVERDUE) R.color.widget_overdue else R.color.widget_due_soon
+            val overdue = item.status.state == DueState.OVERDUE
+            val accent = color(context, if (overdue) R.color.widget_overdue else R.color.widget_due_soon)
+            val contact = item.contact
             views.setViewVisibility(ROWS[i], View.VISIBLE)
-            views.setTextViewText(NAMES[i], item.contact.displayName)
+            views.setTextViewText(NAMES[i], if (cover) contact.displayName.substringBefore(' ') else contact.displayName)
             views.setTextViewText(STATUSES[i], Format.due(res, item.status))
-            views.setTextColor(STATUSES[i], ContextCompat.getColor(context, color))
-            views.setTextViewText(BUTTONS[i], Format.callLabel(res, item.contact.preferredChannel))
-            views.setOnClickPendingIntent(BUTTONS[i], callIntent(context, widgetId * 20 + i * 2, item.contact, region))
-            views.setOnClickPendingIntent(ROW_TEXT[i], openApp(context, widgetId * 20 + i * 2 + 1, item.contact.id, cover))
+            views.setTextColor(STATUSES[i], accent)
+
+            // Overdue rows get the filled cyan button; due-soon rows an outlined one.
+            val buttonBg = if (overdue) R.drawable.widget_button else R.drawable.widget_button_outline
+            val iconColor = color(context, if (overdue) R.color.widget_button_text else R.color.widget_text)
+            views.setInt(BUTTONS[i], "setBackgroundResource", buttonBg)
+            val icon = widgetIcon(contact.preferredChannel)
+            if (cover) {
+                views.setImageViewResource(BUTTONS[i], icon)
+                views.setInt(BUTTONS[i], "setColorFilter", iconColor)
+                views.setContentDescription(BUTTONS[i], Format.callLabel(res, contact.preferredChannel) + " " + contact.displayName)
+                views.setInt(ROWS[i], "setBackgroundResource", if (overdue) R.drawable.widget_card_fading else R.drawable.widget_card)
+            } else {
+                views.setImageViewResource(BUTTON_ICONS[i], icon)
+                views.setInt(BUTTON_ICONS[i], "setColorFilter", iconColor)
+                views.setTextViewText(BUTTON_TEXTS[i], Format.channel(res, contact.preferredChannel))
+                views.setTextColor(BUTTON_TEXTS[i], iconColor)
+                val level = signalLevel(item.status, contact.frequencyDays)
+                val off = color(context, R.color.widget_signal_off)
+                SEGMENTS[i].forEachIndexed { k, seg -> views.setInt(seg, "setBackgroundColor", if (k < level) accent else off) }
+            }
+            views.setOnClickPendingIntent(BUTTONS[i], callIntent(context, widgetId * 20 + i * 2, contact, region))
+            views.setOnClickPendingIntent(ROW_TEXT[i], openApp(context, widgetId * 20 + i * 2 + 1, contact.id, cover))
         }
         return views
+    }
+
+    private fun color(context: Context, id: Int) = ContextCompat.getColor(context, id)
+
+    private fun widgetIcon(c: Channel) = when (c) {
+        Channel.WHATSAPP -> R.drawable.ic_whatsapp
+        Channel.TEXT -> R.drawable.ic_text
+        else -> R.drawable.ic_call
     }
 
     /** Goes straight to the dialer or WhatsApp, which worked with the Flip closed in testing. */

@@ -132,6 +132,15 @@ object Format {
         else -> res.getQuantityString(R.plurals.freq_every_days, days, days)
     }
 
+    /** Short label for a frequency tile: "Weekly", "2 weeks", "3 days". */
+    fun frequencyShort(res: Resources, days: Int): String = when (days) {
+        7 -> res.getString(R.string.freq_weekly)
+        14 -> res.getString(R.string.freq_two_weeks_short)
+        30 -> res.getString(R.string.freq_monthly)
+        90 -> res.getString(R.string.freq_quarterly)
+        else -> res.getQuantityString(R.plurals.unit_days_count, days, days)
+    }
+
     fun date(d: LocalDate): String = d.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM))
 
     fun time(t: Long): String =

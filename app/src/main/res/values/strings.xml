@@ -188,8 +188,8 @@
     <string name="settings_version">InTouch %1$s</string>
 
     <!-- Setup -->
-    <string name="setup_title">Welcome to InTouch</string>
-    <string name="setup_intro">InTouch shows who you\'re due to call and logs your calls automatically. Everything stays on this phone.</string>
+    <string name="setup_title">Welcome to\nInTouch</string>
+    <string name="setup_intro">InTouch shows whose signal is fading and logs your calls and texts for you. Everything stays on this phone.</string>
     <string name="setup_permissions_title">Permissions</string>
     <string name="setup_permissions_body">Contacts to pick people, call history to log phone calls, phone to call in one tap, texts to log texts (who and when only, never what you wrote), and notifications to check whether a WhatsApp call went through.</string>
     <string name="setup_perm_contacts">Contacts</string>
@@ -229,8 +229,8 @@
     <string name="widget_description">Who you\'re due to call</string>
     <string name="widget_empty">Everyone\'s on track</string>
     <plurals name="widget_overdue">
-        <item quantity="one">%d overdue</item>
-        <item quantity="other">%d overdue</item>
+        <item quantity="one">%d fading</item>
+        <item quantity="other">%d fading</item>
     </plurals>
     <plurals name="widget_due_soon">
         <item quantity="one">%d due soon</item>
@@ -252,4 +252,38 @@
     <string name="last_call_short">Talked %1$s</string>
     <string name="log_sent">sent</string>
     <string name="log_received">received</string>
+
+    <!-- Row E redesign -->
+    <string name="freq_two_weeks_short">2 weeks</string>
+    <string name="freq_custom_short">Custom</string>
+    <plurals name="unit_days_count">
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
+    </plurals>
+    <string name="add_last_talk_change">Change</string>
+    <string name="settings_notif_on_plain">Notifications are on</string>
+    <string name="setup_perm_contacts_short">Contacts</string>
+    <string name="setup_perm_sms_short">Texts</string>
+    <string name="setup_perm_notifications_short">Notifications</string>
+    <string name="setup_why_contacts">To pick people</string>
+    <string name="setup_why_call_log">To log phone calls</string>
+    <string name="setup_why_sms">Who and when, never what</string>
+    <string name="setup_why_phone">To call in one tap</string>
+    <string name="setup_why_notifications">For call check-ins</string>
+    <string name="setup_on">On</string>
+    <string name="setup_turn_on">Turn on</string>
+    <string name="setup_wa_on">WhatsApp calls log themselves</string>
+    <string name="log_who">Who reached out</string>
+    <string name="log_they">They did</string>
+    <string name="log_me">I did</string>
+    <string name="log_now">Now</string>
+    <string name="log_yesterday">Yesterday</string>
+    <string name="log_pick">Pick…</string>
+    <string name="log_save">Log it</string>
+    <string name="log_with">with %1$s</string>
+    <string name="snooze_with">Snooze %1$s</string>
+    <string name="snooze_body">Their signal stays steady until then.</string>
+    <string name="unit_day">Day</string>
+    <string name="unit_days">Days</string>
+    <string name="unit_week">Week</string>
 </resources>

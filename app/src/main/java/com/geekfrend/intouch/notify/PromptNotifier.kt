@@ -78,6 +78,7 @@ object PromptNotifier {
         val remaining = (2 * HOUR_MS - (System.currentTimeMillis() - startedAt)).coerceAtLeast(60_000L)
         val notification = NotificationCompat.Builder(context, CHANNEL)
             .setSmallIcon(R.drawable.ic_notification)
+            .setColor(ContextCompat.getColor(context, R.color.ic_fg))
             .setContentTitle(res.getString(R.string.prompt_title, contact.displayName))
             .setContentText(res.getString(R.string.notif_prompt_text, Format.time(startedAt)))
             .setCategory(NotificationCompat.CATEGORY_REMINDER)

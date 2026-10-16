@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -34,7 +35,9 @@ import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -148,6 +151,122 @@ fun SquareIconButton(@DrawableRes icon: Int, description: String, onClick: () ->
     }
 }
 
+/** A bordered panel on the night background (settings sections, setup checklist, info boxes). */
+@Composable
+fun Panel(
+    modifier: Modifier = Modifier,
+    borderColor: Color = InTouchTheme.colors.line,
+    padding: Dp = 16.dp,
+    content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit,
+) {
+    val c = InTouchTheme.colors
+    val shape = RoundedCornerShape(InTouchTheme.sizes.corner)
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(c.panel)
+            .border(1.dp, borderColor, shape)
+            .padding(padding),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        content = content,
+    )
+}
+
+/** A small rotated square: lit (cyan, glowing) or an empty outline. */
+@Composable
+fun DiamondDot(lit: Boolean, size: Dp = 9.dp, color: Color = InTouchTheme.colors.signal) {
+    val c = InTouchTheme.colors
+    Box(
+        Modifier
+            .size(size)
+            .rotate(45f)
+            .then(if (lit) Modifier.background(color) else Modifier.border(1.5.dp, c.lineStrong))
+    )
+}
+
+/** A selectable tile: cyan outline and text when selected. Optional icon above the label. */
+@Composable
+fun SelectTile(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    @DrawableRes icon: Int? = null,
+    height: Dp = if (icon != null) 64.dp else 44.dp,
+    background: Color = InTouchTheme.colors.panel,
+    dashed: Boolean = false,
+) {
+    val c = InTouchTheme.colors
+    val shape = RoundedCornerShape(InTouchTheme.sizes.buttonCorner)
+    val color = if (selected) c.signal else c.text
+    Column(
+        modifier = modifier
+            .height(height)
+            .clip(shape)
+            .background(background)
+            .then(
+                if (dashed && !selected) {
+                    Modifier.drawBehind {
+                        drawRoundRect(
+                            color = c.lineStrong,
+                            style = Stroke(width = 1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 6f))),
+                            cornerRadius = CornerRadius(4.dp.toPx()),
+                        )
+                    }
+                } else {
+                    Modifier.border(1.dp, if (selected) c.signal else c.line, shape)
+                }
+            )
+            .clickable(onClick = onClick)
+            .semantics { this.selected = selected },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+        if (icon != null) {
+            Icon(painterResource(icon), contentDescription = null, tint = color, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.height(6.dp))
+        }
+        Text(text, style = MaterialTheme.typography.titleSmall, color = color, maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+/** A joined row of choices; the chosen one is filled cyan. */
+@Composable
+fun Segmented(options: List<String>, selectedIndex: Int, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
+    val c = InTouchTheme.colors
+    val shape = RoundedCornerShape(InTouchTheme.sizes.buttonCorner)
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(44.dp)
+            .clip(shape)
+            .border(1.dp, c.lineStrong, shape),
+    ) {
+        options.forEachIndexed { i, label ->
+            val selected = i == selectedIndex
+            if (i > 0) Box(Modifier.width(1.dp).fillMaxHeight().background(c.lineStrong))
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .background(if (selected) c.signal else Color.Transparent)
+                    .clickable { onSelect(i) }
+                    .semantics { this.selected = selected },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    label,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold,
+                    color = if (selected) c.night else c.text,
+                    maxLines = 1,
+                )
+            }
+        }
+    }
+}
+
 /** The main call button: filled signal color. */
 @Composable
 fun SignalButton(
@@ -156,13 +275,20 @@ fun SignalButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     height: Dp = 48.dp,
+    enabled: Boolean = true,
 ) {
     val c = InTouchTheme.colors
     Button(
         onClick = onClick,
+        enabled = enabled,
         modifier = modifier.height(height),
         shape = RoundedCornerShape(InTouchTheme.sizes.buttonCorner),
-        colors = ButtonDefaults.buttonColors(containerColor = c.signal, contentColor = c.night),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = c.signal,
+            contentColor = c.night,
+            disabledContainerColor = c.line,
+            disabledContentColor = c.muted,
+        ),
         contentPadding = PaddingValues(horizontal = 12.dp),
     ) {
         if (icon != null) {
@@ -217,7 +343,7 @@ fun PanelButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier
 
 /** A dashed-outline button (Add someone). */
 @Composable
-fun DashedButton(text: String, @DrawableRes icon: Int, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun DashedButton(text: String, @DrawableRes icon: Int?, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val c = InTouchTheme.colors
     val corner = InTouchTheme.sizes.corner
     Row(
@@ -235,8 +361,10 @@ fun DashedButton(text: String, @DrawableRes icon: Int, onClick: () -> Unit, modi
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(painterResource(icon), contentDescription = null, tint = c.text, modifier = Modifier.size(16.dp))
-        Spacer(Modifier.width(10.dp))
+        if (icon != null) {
+            Icon(painterResource(icon), contentDescription = null, tint = c.text, modifier = Modifier.size(16.dp))
+            Spacer(Modifier.width(10.dp))
+        }
         Text(text.uppercase(), style = MaterialTheme.typography.labelMedium, color = c.text)
     }
 }

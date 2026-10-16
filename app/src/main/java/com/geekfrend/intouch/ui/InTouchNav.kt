@@ -277,10 +277,12 @@ private fun ContactRoute(
             showOutcome = false,
             onDismiss = { dialog = null },
             onSave = { vm.logCall(id, it); dialog = null },
+            subtitle = stringResource(R.string.log_with, name),
         )
         ContactDialog.Snooze -> SnoozeDialog(
             onDismiss = { dialog = null },
             onSnooze = { vm.snooze(id, it); dialog = null },
+            name = name,
         )
         ContactDialog.ConfirmSkip -> ConfirmDialog(
             title = stringResource(R.string.skip_title),
@@ -315,6 +317,7 @@ private fun ContactRoute(
                 showOutcome = true,
                 onDismiss = { dialog = null },
                 onSave = { vm.updateEntry(i, it); dialog = null },
+                subtitle = stringResource(R.string.log_with, name),
             )
         }
         null -> Unit
