@@ -125,7 +125,7 @@ class Repository(
                 .forEach { calls.add(PhoneNumbers.normalize(it.number, region) to it.date) }
         }
         if (granted(Manifest.permission.READ_SMS)) {
-            runCatching { SmsReader.since(context, since) }.getOrElse { emptyList() }
+            runCatching { SmsReader.since(context, since, p.numbers.map { it.number }) }.getOrElse { emptyList() }
                 .forEach { calls.add(PhoneNumbers.normalize(it.address, region) to it.date) }
         }
         if (calls.isEmpty()) return@withContext p
@@ -297,7 +297,8 @@ class Repository(
         val region = prefs.region
         val keyed = cs.map { it to PhoneNumbers.normalize(it.phoneNumber, region) }
         val rows = try {
-            SmsReader.since(context, since)
+            // Only tracked numbers are asked for, so texts with anyone else never reach InTouch.
+            SmsReader.since(context, since, cs.map { it.phoneNumber })
         } catch (e: SecurityException) {
             return 0
         }
