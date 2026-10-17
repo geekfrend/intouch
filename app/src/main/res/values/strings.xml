@@ -286,4 +286,9 @@
     <string name="unit_day">Day</string>
     <string name="unit_days">Days</string>
     <string name="unit_week">Week</string>
+    <string name="settings_theme_title">Theme</string>
+    <string name="theme_drifter">Drifter</string>
+    <string name="theme_drifter_body">Night sky, neon signal</string>
+    <string name="theme_monument">Monument</string>
+    <string name="theme_monument_body">Warm sand, soft shapes</string>
 </resources>

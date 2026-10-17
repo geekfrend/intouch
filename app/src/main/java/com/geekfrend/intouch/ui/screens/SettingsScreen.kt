@@ -1,6 +1,13 @@
 package com.geekfrend.intouch.ui.screens
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
+import com.geekfrend.intouch.ui.theme.AppTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -54,6 +61,7 @@ data class SettingsState(
     val countryCode: Int,
     val archived: List<TrackedContact>,
     val version: String,
+    val theme: AppTheme = AppTheme.DRIFTER,
 )
 
 val MIN_CALL_OPTIONS = listOf(10, 20, 30, 45, 60)
@@ -74,6 +82,7 @@ fun SettingsScreen(
     onUnarchive: (String) -> Unit,
     onExport: () -> Unit,
     onImport: () -> Unit,
+    onTheme: (AppTheme) -> Unit = {},
 ) {
     val c = InTouchTheme.colors
     Scaffold(containerColor = c.night, snackbarHost = { SnackbarHost(snackbar) }) { padding ->
@@ -86,6 +95,13 @@ fun SettingsScreen(
                     .padding(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 32.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
+                SettingsCard(stringResource(R.string.settings_theme_title)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        ThemeChoice(AppTheme.DRIFTER, stringResource(R.string.theme_drifter), stringResource(R.string.theme_drifter_body), state.theme, onTheme, Modifier.weight(1f))
+                        ThemeChoice(AppTheme.MONUMENT, stringResource(R.string.theme_monument), stringResource(R.string.theme_monument_body), state.theme, onTheme, Modifier.weight(1f))
+                    }
+                }
+
                 SettingsCard(
                     title = stringResource(R.string.settings_wa_title),
                     trailing = {
@@ -180,6 +196,57 @@ fun SettingsScreen(
                 Text(stringResource(R.string.settings_version, state.version), style = MaterialTheme.typography.bodySmall, color = c.muted)
             }
         }
+    }
+}
+
+/** A small preview of a theme: its ground, a card, a signal bar and a button, in that theme's own colors. */
+@Composable
+private fun ThemeChoice(
+    theme: AppTheme,
+    name: String,
+    body: String,
+    current: AppTheme,
+    onPick: (AppTheme) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val c = InTouchTheme.colors
+    val selected = theme == current
+    // Fixed swatches, so each preview shows its own theme whichever one is active.
+    val sw = if (theme == AppTheme.MONUMENT) {
+        listOf(Color(0xFFF4E6D8), Color(0xFFFFF8F0), Color(0xFF3D7A6C), Color(0xFFB84A33), Color(0xFF3A2C4C), Color(0xFFE8D4C2))
+    } else {
+        listOf(Color(0xFF110E24), Color(0xFF1B1736), Color(0xFF43E5D6), Color(0xFFFF5C9E), Color(0xFFEEE8FF), Color(0xFF2C2650))
+    }
+    val round = if (theme == AppTheme.MONUMENT) 12.dp else 3.dp
+    val outer = RoundedCornerShape(InTouchTheme.sizes.corner)
+    Column(
+        modifier = modifier
+            .clip(outer)
+            .border(if (selected) 2.dp else 1.dp, if (selected) c.signal else c.line, outer)
+            .selectable(selected = selected, role = Role.RadioButton, onClick = { onPick(theme) })
+            .padding(10.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Column(
+            Modifier.fillMaxWidth().height(96.dp).clip(RoundedCornerShape(round)).background(sw[0]).padding(8.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Column(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(round)).background(sw[1]).border(1.dp, sw[5], RoundedCornerShape(round)).padding(6.dp),
+                verticalArrangement = Arrangement.spacedBy(5.dp),
+            ) {
+                Box(Modifier.width(40.dp).height(5.dp).clip(RoundedCornerShape(2.dp)).background(sw[4]))
+                Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                    repeat(5) { i -> Box(Modifier.weight(1f).height(3.dp).background(if (i < 2) sw[3] else sw[5])) }
+                }
+                Box(Modifier.fillMaxWidth().height(14.dp).clip(RoundedCornerShape(if (theme == AppTheme.MONUMENT) 7.dp else 2.dp)).background(sw[2]))
+            }
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(name, style = MaterialTheme.typography.titleSmall, color = if (selected) c.signal else c.text, modifier = Modifier.weight(1f))
+            if (selected) DiamondDot(lit = true, size = 8.dp)
+        }
+        Text(body, style = MaterialTheme.typography.bodySmall, color = c.muted)
     }
 }
 

@@ -406,6 +406,7 @@ private fun SettingsRoute(vm: InTouchViewModel, nav: NavHostController, activity
         onUnarchive = { vm.setArchived(it, false) },
         onExport = { exporter.launch("intouch-backup-${LocalDate.now()}.json") },
         onImport = { importer.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
+        onTheme = vm::setTheme,
     )
 
     confirmImport?.let { uri ->

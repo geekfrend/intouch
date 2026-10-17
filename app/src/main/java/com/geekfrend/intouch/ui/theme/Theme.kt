@@ -5,7 +5,9 @@ package com.geekfrend.intouch.ui.theme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -26,7 +28,7 @@ import androidx.compose.ui.unit.sp
 import com.geekfrend.intouch.R
 
 /*
- * DESIGN TOKENS — "Drifter × Monument" (chosen Oct 16)
+ * DESIGN TOKENS — two themes, chosen in Settings: "Drifter" (default; chosen Oct 16) and "Monument"
  *
  * Colors and the tile layout come from the Drifter direction (deep indigo night, neon signal
  * colors); the type comes from Monument (Josefin Sans for headings, names, labels and numbers;
@@ -34,8 +36,12 @@ import com.geekfrend.intouch.R
  * Compose themes, so its colors live in res/values/colors.xml.
  */
 
-/** Raw palette. Screens use [InTouchTheme.colors] or MaterialTheme, never these directly. */
+/** The two looks the app offers (Settings › Theme). */
+enum class AppTheme { DRIFTER, MONUMENT }
+
+/** Raw palettes. Screens use [InTouchTheme.colors] or MaterialTheme, never these directly. */
 private object Palette {
+    // Drifter: deep indigo night with neon signal colors.
     val Night = Color(0xFF110E24)
     val Panel = Color(0xFF1B1736)
     val Line = Color(0xFF2C2650)
@@ -45,6 +51,19 @@ private object Palette {
     val Signal = Color(0xFF43E5D6) // strong signal, primary actions
     val Fading = Color(0xFFFF5C9E) // overdue
     val Soon = Color(0xFFFFC65C) // due soon
+}
+
+/** Monument (canvas row A): warm sand and plum, sage for on track, terracotta for overdue, violet for soon. */
+private object MonumentPalette {
+    val Sand = Color(0xFFF4E6D8)
+    val Card = Color(0xFFFFF8F0)
+    val Line = Color(0xFFE8D4C2)
+    val LineStrong = Color(0xFFD6BFA9)
+    val Plum = Color(0xFF3A2C4C)
+    val Muted = Color(0xFF6E5F80)
+    val Sage = Color(0xFF3D7A6C)
+    val Terracotta = Color(0xFFB84A33)
+    val Violet = Color(0xFF6F5A9E)
 }
 
 @Immutable
@@ -58,6 +77,8 @@ data class AppColors(
     val signal: Color,
     val fading: Color,
     val soon: Color,
+    /** True for a light theme (dark text and status-bar icons). */
+    val light: Boolean = false,
 )
 
 /** Colors for Overdue / Due soon / On track. */
@@ -87,7 +108,7 @@ data class Sizes(
     val buttonCorner: Dp = 4.dp,
 )
 
-private val AppColorsValue = AppColors(
+private val DrifterColors = AppColors(
     night = Palette.Night,
     panel = Palette.Panel,
     line = Palette.Line,
@@ -99,37 +120,58 @@ private val AppColorsValue = AppColors(
     soon = Palette.Soon,
 )
 
-private val Status = StatusColors(overdue = Palette.Fading, dueSoon = Palette.Soon, onTrack = Palette.Signal)
-
-private val Scheme = darkColorScheme(
-    primary = Palette.Signal,
-    onPrimary = Palette.Night,
-    primaryContainer = Palette.Panel,
-    onPrimaryContainer = Palette.Text,
-    secondary = Palette.Soon,
-    onSecondary = Palette.Night,
-    secondaryContainer = Palette.Line,
-    onSecondaryContainer = Palette.Text,
-    tertiary = Palette.Fading,
-    onTertiary = Palette.Night,
-    background = Palette.Night,
-    onBackground = Palette.Text,
-    surface = Palette.Night,
-    onSurface = Palette.Text,
-    surfaceVariant = Palette.Panel,
-    onSurfaceVariant = Palette.Muted,
-    surfaceContainerLowest = Palette.Night,
-    surfaceContainerLow = Palette.Panel,
-    surfaceContainer = Palette.Panel,
-    surfaceContainerHigh = Palette.Panel,
-    surfaceContainerHighest = Palette.Panel,
-    outline = Palette.LineStrong,
-    outlineVariant = Palette.Line,
-    error = Palette.Fading,
-    onError = Palette.Night,
-    errorContainer = Color(0xFF3A1530),
-    onErrorContainer = Palette.Text,
+private val MonumentColors = AppColors(
+    night = MonumentPalette.Sand,
+    panel = MonumentPalette.Card,
+    line = MonumentPalette.Line,
+    lineStrong = MonumentPalette.LineStrong,
+    text = MonumentPalette.Plum,
+    muted = MonumentPalette.Muted,
+    signal = MonumentPalette.Sage,
+    fading = MonumentPalette.Terracotta,
+    soon = MonumentPalette.Violet,
+    light = true,
 )
+
+private fun scheme(c: AppColors, errorContainer: Color): ColorScheme {
+    val base = if (c.light) lightColorScheme() else darkColorScheme()
+    return base.copy(
+        primary = c.signal,
+        onPrimary = c.night,
+        primaryContainer = c.panel,
+        onPrimaryContainer = c.text,
+        secondary = c.soon,
+        onSecondary = c.night,
+        secondaryContainer = c.line,
+        onSecondaryContainer = c.text,
+        tertiary = c.fading,
+        onTertiary = c.night,
+        background = c.night,
+        onBackground = c.text,
+        surface = c.night,
+        onSurface = c.text,
+        surfaceVariant = c.panel,
+        onSurfaceVariant = c.muted,
+        surfaceContainerLowest = c.night,
+        surfaceContainerLow = c.panel,
+        surfaceContainer = c.panel,
+        surfaceContainerHigh = c.panel,
+        surfaceContainerHighest = c.panel,
+        outline = c.lineStrong,
+        outlineVariant = c.line,
+        error = c.fading,
+        onError = c.night,
+        errorContainer = errorContainer,
+        onErrorContainer = c.text,
+    )
+}
+
+private val DrifterScheme = scheme(DrifterColors, Color(0xFF3A1530))
+private val MonumentScheme = scheme(MonumentColors, Color(0xFFF7D9CF))
+
+/** Drifter is square-cut; Monument is soft and rounded, with pill buttons. */
+private val DrifterSizes = Sizes()
+private val MonumentSizes = Sizes(corner = 20.dp, buttonCorner = 22.dp)
 
 /** Josefin Sans (variable font): headings, names, labels, numbers. */
 private val Josefin = FontFamily(
@@ -179,7 +221,7 @@ private val AppTypography = Typography(
     labelSmall = label(11),
 )
 
-private val AppShapes = Shapes(
+private val DrifterShapes = Shapes(
     extraSmall = RoundedCornerShape(4.dp),
     small = RoundedCornerShape(4.dp),
     medium = RoundedCornerShape(6.dp),
@@ -187,21 +229,37 @@ private val AppShapes = Shapes(
     extraLarge = RoundedCornerShape(12.dp),
 )
 
-private val LocalAppColors = staticCompositionLocalOf { AppColorsValue }
-private val LocalStatusColors = staticCompositionLocalOf { Status }
+private val MonumentShapes = Shapes(
+    extraSmall = RoundedCornerShape(10.dp),
+    small = RoundedCornerShape(14.dp),
+    medium = RoundedCornerShape(20.dp),
+    large = RoundedCornerShape(24.dp),
+    extraLarge = RoundedCornerShape(28.dp),
+)
+
+private val LocalAppColors = staticCompositionLocalOf { DrifterColors }
+private val LocalStatusColors = staticCompositionLocalOf { status(DrifterColors) }
 private val LocalSpacing = staticCompositionLocalOf { Spacing() }
 private val LocalSizes = staticCompositionLocalOf { Sizes() }
 
-/** The app is always dark: the night palette is the design. */
+private fun status(c: AppColors) = StatusColors(overdue = c.fading, dueSoon = c.soon, onTrack = c.signal)
+
+/** Wraps the app in the chosen look. Type is the same in both: Josefin Sans and Nunito Sans. */
 @Composable
-fun InTouchTheme(content: @Composable () -> Unit) {
+fun InTouchTheme(theme: AppTheme = AppTheme.DRIFTER, content: @Composable () -> Unit) {
+    val colors = if (theme == AppTheme.MONUMENT) MonumentColors else DrifterColors
     CompositionLocalProvider(
-        LocalAppColors provides AppColorsValue,
-        LocalStatusColors provides Status,
+        LocalAppColors provides colors,
+        LocalStatusColors provides status(colors),
         LocalSpacing provides Spacing(),
-        LocalSizes provides Sizes(),
+        LocalSizes provides if (theme == AppTheme.MONUMENT) MonumentSizes else DrifterSizes,
     ) {
-        MaterialTheme(colorScheme = Scheme, typography = AppTypography, shapes = AppShapes, content = content)
+        MaterialTheme(
+            colorScheme = if (theme == AppTheme.MONUMENT) MonumentScheme else DrifterScheme,
+            typography = AppTypography,
+            shapes = if (theme == AppTheme.MONUMENT) MonumentShapes else DrifterShapes,
+            content = content,
+        )
     }
 }
 

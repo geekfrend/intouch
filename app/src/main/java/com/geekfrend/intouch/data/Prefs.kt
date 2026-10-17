@@ -24,6 +24,11 @@ class Prefs(context: Context) {
         _version.value = _version.value + 1
     }
 
+    /** The app's look: "DRIFTER" (default) or "MONUMENT". */
+    var theme: String
+        get() = p.getString("theme", "DRIFTER") ?: "DRIFTER"
+        set(v) { p.edit().putString("theme", v).apply(); changed() }
+
     var setupDone: Boolean
         get() = p.getBoolean("setupDone", false)
         set(v) { p.edit().putBoolean("setupDone", v).apply(); changed() }

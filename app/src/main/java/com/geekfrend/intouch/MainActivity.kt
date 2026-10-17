@@ -10,7 +10,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import com.geekfrend.intouch.ui.InTouchNav
 import com.geekfrend.intouch.ui.InTouchViewModel
+import com.geekfrend.intouch.ui.theme.AppTheme
 import com.geekfrend.intouch.ui.theme.InTouchTheme
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import kotlinx.coroutines.flow.MutableStateFlow
 
 class MainActivity : ComponentActivity() {
@@ -23,17 +28,27 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // The app is always dark, so the status and navigation bars always use light icons.
-        enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
-            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
-        )
+        applyBars(vm.theme())
         if (savedInstanceState == null) handle(intent)
         setContent {
-            InTouchTheme {
+            // Re-read the theme whenever a setting changes, so switching in Settings applies at once.
+            val version by vm.settingsVersion.collectAsState()
+            val theme = remember(version) { vm.theme() }
+            LaunchedEffect(theme) { applyBars(theme) }
+            InTouchTheme(theme) {
                 InTouchNav(vm, openContact, onOpenHandled = { openContact.value = null })
             }
         }
+    }
+
+    /** Light status-bar icons on Drifter's night, dark ones on Monument's sand. */
+    private fun applyBars(theme: AppTheme) {
+        val style = if (theme == AppTheme.MONUMENT) {
+            SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+        } else {
+            SystemBarStyle.dark(Color.TRANSPARENT)
+        }
+        enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
     }
 
     override fun onNewIntent(intent: Intent) {

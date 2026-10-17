@@ -467,7 +467,7 @@ fun Avatar(name: String, photoUri: String?, size: Dp, small: Boolean = false) {
         modifier = Modifier
             .size(size)
             .clip(CircleShape)
-            .background(Color(Photos.fallbackColor(name)))
+            .background(Color(if (c.light) Photos.fallbackColorLight(name) else Photos.fallbackColor(name)))
             .border(1.dp, c.lineStrong, CircleShape),
         contentAlignment = Alignment.Center,
     ) {

@@ -22,6 +22,12 @@ object Photos {
 
     fun fallbackColor(name: String): Long = FALLBACK_COLORS[Math.floorMod(name.hashCode(), FALLBACK_COLORS.size)]
 
+    /** Soft pastels for the light (Monument) theme, behind dark initials. */
+    val FALLBACK_COLORS_LIGHT = longArrayOf(0xFFF7C9B6, 0xFFCDBEE6, 0xFFB9DDD2, 0xFFEAD8C8, 0xFFF3D3AE, 0xFFD6E4F0)
+
+    fun fallbackColorLight(name: String): Long =
+        FALLBACK_COLORS_LIGHT[Math.floorMod(name.hashCode(), FALLBACK_COLORS_LIGHT.size)]
+
     fun initials(name: String): String =
         name.split(' ').filter { it.isNotBlank() }.take(2).joinToString("") { it.first().uppercase() }.ifEmpty { "?" }
 

@@ -34,6 +34,7 @@ import com.geekfrend.intouch.notify.PromptNotifier
 import com.geekfrend.intouch.work.PromptWork
 import com.geekfrend.intouch.ui.dialogs.LogDraft
 import com.geekfrend.intouch.ui.screens.SettingsState
+import com.geekfrend.intouch.ui.theme.AppTheme
 import com.geekfrend.intouch.ui.screens.SetupState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -255,7 +256,14 @@ class InTouchViewModel(application: Application) : AndroidViewModel(application)
         countryCode = prefs.countryCode,
         archived = archived,
         version = versionName(),
+        theme = theme(),
     )
+
+    fun theme(): AppTheme = runCatching { AppTheme.valueOf(prefs.theme) }.getOrDefault(AppTheme.DRIFTER)
+
+    fun setTheme(theme: AppTheme) {
+        prefs.theme = theme.name
+    }
 
     fun setupState(): SetupState = SetupState(
         contacts = granted(Manifest.permission.READ_CONTACTS),
