@@ -19,6 +19,7 @@ import com.geekfrend.intouch.data.DueItem
 import com.geekfrend.intouch.data.DueOverview
 import com.geekfrend.intouch.data.TrackedContact
 import com.geekfrend.intouch.device.CallLauncher
+import com.geekfrend.intouch.device.Photos
 import com.geekfrend.intouch.domain.DueState
 import com.geekfrend.intouch.ui.Format
 import com.geekfrend.intouch.ui.components.signalLevel
@@ -75,6 +76,7 @@ object WidgetUpdater {
     private val NAMES = intArrayOf(R.id.name_1, R.id.name_2, R.id.name_3, R.id.name_4, R.id.name_5, R.id.name_6)
     private val STATUSES = intArrayOf(R.id.status_1, R.id.status_2, R.id.status_3, R.id.status_4, R.id.status_5, R.id.status_6)
     private val BUTTONS = intArrayOf(R.id.button_1, R.id.button_2, R.id.button_3, R.id.button_4, R.id.button_5, R.id.button_6)
+    private val PHOTOS = intArrayOf(R.id.photo_1, R.id.photo_2, R.id.photo_3, R.id.photo_4, R.id.photo_5, R.id.photo_6)
     private val BUTTON_ICONS = intArrayOf(R.id.button_icon_1, R.id.button_icon_2, R.id.button_icon_3, R.id.button_icon_4, R.id.button_icon_5, R.id.button_icon_6)
     private val BUTTON_TEXTS = intArrayOf(R.id.button_text_1, R.id.button_text_2, R.id.button_text_3, R.id.button_text_4, R.id.button_text_5, R.id.button_text_6)
     private val SEGMENTS = arrayOf(
@@ -145,6 +147,8 @@ object WidgetUpdater {
             views.setTextViewText(NAMES[i], if (cover) contact.displayName.substringBefore(' ') else contact.displayName)
             views.setTextViewText(STATUSES[i], Format.due(res, item.status))
             views.setTextColor(STATUSES[i], accent)
+            val photoPx = ((if (cover) 40 else 32) * res.displayMetrics.density).toInt()
+            views.setImageViewBitmap(PHOTOS[i], Photos.circle(context, contact.displayName, contact.photoUri, photoPx, color(context, R.color.widget_text)))
 
             // Overdue rows get the filled cyan button; due-soon rows an outlined one.
             val buttonBg = if (overdue) R.drawable.widget_button else R.drawable.widget_button_outline

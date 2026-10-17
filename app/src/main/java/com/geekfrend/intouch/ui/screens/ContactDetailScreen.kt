@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -46,6 +47,7 @@ import com.geekfrend.intouch.domain.DueState
 import com.geekfrend.intouch.ui.Format
 import com.geekfrend.intouch.ui.components.GhostButton
 import com.geekfrend.intouch.ui.components.Label
+import com.geekfrend.intouch.ui.components.PhotoBanner
 import com.geekfrend.intouch.ui.components.PanelButton
 import com.geekfrend.intouch.ui.components.SignalBar
 import com.geekfrend.intouch.ui.components.SignalButton
@@ -108,6 +110,21 @@ fun ContactDetailScreen(
                             DropdownMenuItem(text = { Text(stringResource(R.string.archive)) }, onClick = { menuOpen = false; onArchive() })
                             DropdownMenuItem(text = { Text(stringResource(R.string.delete)) }, onClick = { menuOpen = false; onDelete() })
                         }
+                    }
+                }
+            }
+
+            item(key = "photo") {
+                val shape = RoundedCornerShape(InTouchTheme.sizes.corner)
+                Column(Modifier.fillMaxWidth().clip(shape).border(1.dp, if (s.state == DueState.OVERDUE) c.fading else c.line, shape)) {
+                    PhotoBanner(
+                        contact.displayName,
+                        contact.photoUri,
+                        Modifier.fillMaxWidth().height(if (compact) 104.dp else 200.dp),
+                        initialsStyle = MaterialTheme.typography.displayMedium,
+                    )
+                    Box(Modifier.fillMaxWidth().height(4.dp).background(c.line)) {
+                        Box(Modifier.fillMaxWidth(level / 5f).fillMaxHeight().background(color))
                     }
                 }
             }

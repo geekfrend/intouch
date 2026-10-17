@@ -65,6 +65,13 @@
         android:orientation="horizontal"
         android:visibility="gone">
 
+        <ImageView
+            android:id="@+id/photo_1"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginEnd="10dp"
+            android:importantForAccessibility="no" />
+
         <LinearLayout
             android:id="@+id/row_text_1"
             android:layout_width="0dp"
@@ -185,6 +192,13 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/photo_2"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginEnd="10dp"
+            android:importantForAccessibility="no" />
 
         <LinearLayout
             android:id="@+id/row_text_2"
@@ -307,6 +321,13 @@
         android:orientation="horizontal"
         android:visibility="gone">
 
+        <ImageView
+            android:id="@+id/photo_3"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginEnd="10dp"
+            android:importantForAccessibility="no" />
+
         <LinearLayout
             android:id="@+id/row_text_3"
             android:layout_width="0dp"
@@ -427,6 +448,13 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/photo_4"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginEnd="10dp"
+            android:importantForAccessibility="no" />
 
         <LinearLayout
             android:id="@+id/row_text_4"
@@ -549,6 +577,13 @@
         android:orientation="horizontal"
         android:visibility="gone">
 
+        <ImageView
+            android:id="@+id/photo_5"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginEnd="10dp"
+            android:importantForAccessibility="no" />
+
         <LinearLayout
             android:id="@+id/row_text_5"
             android:layout_width="0dp"
@@ -669,6 +704,13 @@
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/photo_6"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginEnd="10dp"
+            android:importantForAccessibility="no" />
 
         <LinearLayout
             android:id="@+id/row_text_6"

@@ -1,7 +1,5 @@
 package com.geekfrend.intouch.ui.components
 
-import android.graphics.BitmapFactory
-import android.net.Uri
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -58,6 +56,7 @@ import androidx.compose.ui.unit.dp
 import com.geekfrend.intouch.R
 import com.geekfrend.intouch.data.Channel
 import com.geekfrend.intouch.data.DueItem
+import com.geekfrend.intouch.device.Photos
 import com.geekfrend.intouch.domain.ContactStatus
 import com.geekfrend.intouch.domain.DueState
 import com.geekfrend.intouch.ui.Format
@@ -399,6 +398,7 @@ fun ContactTile(item: DueItem, compact: Boolean, onOpen: () -> Unit, onCall: (Ch
     val contact = item.contact
     val fading = item.status.state == DueState.OVERDUE
     val color = statusColor(item.status.state)
+    val level = signalLevel(item.status, contact.frequencyDays)
     val statusText = if (item.status.state == DueState.ON_TRACK && item.status.snoozedUntil == null && item.status.lastConnectedAt != null) {
         Format.lastCallShort(res, item.status)
     } else {
@@ -413,71 +413,87 @@ fun ContactTile(item: DueItem, compact: Boolean, onOpen: () -> Unit, onCall: (Ch
             .clip(shape)
             .background(c.panel)
             .border(1.dp, if (fading) c.fading else c.line, shape)
-            .clickable(onClick = onOpen)
-            .padding(14.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+            .clickable(onClick = onOpen),
     ) {
-        Text(
-            contact.displayName,
-            style = MaterialTheme.typography.titleMedium,
-            color = c.text,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        SignalBar(signalLevel(item.status, contact.frequencyDays), color, Modifier.fillMaxWidth())
-        Text(
-            statusText,
-            style = MaterialTheme.typography.bodySmall,
-            fontWeight = if (item.status.state == DueState.ON_TRACK) FontWeight.Normal else FontWeight.Bold,
-            color = if (item.status.state == DueState.ON_TRACK) c.muted else color,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
-        Spacer(Modifier.weight(1f))
-        val label = Format.channel(res, contact.preferredChannel)
-        if (fading) {
-            SignalButton(label, channelIcon(contact.preferredChannel), { onCall(contact.preferredChannel) }, Modifier.fillMaxWidth(), height = 40.dp)
-        } else {
-            GhostButton(label, channelIcon(contact.preferredChannel), { onCall(contact.preferredChannel) }, Modifier.fillMaxWidth(), height = 40.dp)
+        PhotoBanner(contact.displayName, contact.photoUri, Modifier.fillMaxWidth().height(if (compact) 48.dp else 76.dp))
+        // Signal strip under the photo: its length is the signal level, in the status color.
+        Box(Modifier.fillMaxWidth().height(3.dp).background(c.line)) {
+            Box(Modifier.fillMaxWidth(level / 5f).fillMaxHeight().background(color))
+        }
+        Column(
+            Modifier.fillMaxWidth().weight(1f).padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                contact.displayName,
+                style = MaterialTheme.typography.titleMedium,
+                color = c.text,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                statusText,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = if (item.status.state == DueState.ON_TRACK) FontWeight.Normal else FontWeight.Bold,
+                color = if (item.status.state == DueState.ON_TRACK) c.muted else color,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.weight(1f))
+            val label = Format.channel(res, contact.preferredChannel)
+            if (fading) {
+                SignalButton(label, channelIcon(contact.preferredChannel), { onCall(contact.preferredChannel) }, Modifier.fillMaxWidth(), height = 36.dp)
+            } else {
+                GhostButton(label, channelIcon(contact.preferredChannel), { onCall(contact.preferredChannel) }, Modifier.fillMaxWidth(), height = 36.dp)
+            }
         }
     }
 }
 
-/** Contact photo from the address book, or initials (used on the add and edit screens). */
+/** Loads a contact photo off the main thread, downsampled to about [maxPx]. */
 @Composable
-fun Avatar(name: String, photoUri: String?, size: Dp) {
+fun rememberContactPhoto(photoUri: String?, maxPx: Int): ImageBitmap? {
     val context = LocalContext.current
+    val bitmap by produceState<ImageBitmap?>(initialValue = null, photoUri, maxPx) {
+        value = withContext(Dispatchers.IO) { Photos.load(context, photoUri, maxPx)?.asImageBitmap() }
+    }
+    return bitmap
+}
+
+/** The contact's photo cropped to fill the space, or their initials on their own muted color. */
+@Composable
+fun PhotoBanner(name: String, photoUri: String?, modifier: Modifier = Modifier, initialsStyle: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.headlineSmall) {
     val c = InTouchTheme.colors
-    val bitmap by produceState<ImageBitmap?>(initialValue = null, photoUri) {
-        value = photoUri?.let { uri ->
-            withContext(Dispatchers.IO) {
-                runCatching {
-                    context.contentResolver.openInputStream(Uri.parse(uri))?.use { s ->
-                        BitmapFactory.decodeStream(s)?.asImageBitmap()
-                    }
-                }.getOrNull()
-            }
+    val photo = rememberContactPhoto(photoUri, 480)
+    Box(modifier.background(Color(Photos.fallbackColor(name))), contentAlignment = Alignment.Center) {
+        if (photo != null) {
+            Image(bitmap = photo, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+        } else {
+            Text(Photos.initials(name), style = initialsStyle, color = c.text)
         }
     }
+}
+
+/** Round contact photo, or initials (add and edit screens). */
+@Composable
+fun Avatar(name: String, photoUri: String?, size: Dp) {
+    val c = InTouchTheme.colors
+    val photo = rememberContactPhoto(photoUri, 240)
     Box(
         modifier = Modifier
             .size(size)
             .clip(CircleShape)
-            .background(c.panel)
+            .background(Color(Photos.fallbackColor(name)))
             .border(1.dp, c.lineStrong, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        val b = bitmap
-        if (b != null) {
-            Image(bitmap = b, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+        if (photo != null) {
+            Image(bitmap = photo, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
         } else {
-            Text(initials(name), style = MaterialTheme.typography.titleMedium, color = c.text)
+            Text(Photos.initials(name), style = MaterialTheme.typography.titleMedium, color = c.text)
         }
     }
 }
-
-private fun initials(name: String): String =
-    name.split(' ').filter { it.isNotBlank() }.take(2).joinToString("") { it.first().uppercase() }.ifEmpty { "?" }
 
 @Composable
 fun EmptyState(text: String, buttonLabel: String?, onClick: () -> Unit, modifier: Modifier = Modifier) {
