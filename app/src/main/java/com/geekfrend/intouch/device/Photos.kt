@@ -50,7 +50,7 @@ object Photos {
     }
 
     /** A round photo (or initials on the person's color) for widgets, which can't clip images themselves. */
-    fun circle(context: Context, name: String, uri: String?, px: Int, textColor: Int): Bitmap {
+    fun circle(context: Context, name: String, uri: String?, px: Int, textColor: Int, light: Boolean = false): Bitmap {
         val out = Bitmap.createBitmap(px, px, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(out)
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -63,7 +63,7 @@ object Photos {
             paint.shader = BitmapShader(scaled, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
             canvas.drawCircle(r, r, r, paint)
         } else {
-            paint.color = fallbackColor(name).toInt()
+            paint.color = (if (light) fallbackColorLight(name) else fallbackColor(name)).toInt()
             canvas.drawCircle(r, r, r, paint)
             paint.color = textColor
             paint.textSize = px * 0.38f

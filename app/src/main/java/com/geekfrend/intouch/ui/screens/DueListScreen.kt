@@ -55,6 +55,7 @@ fun DueListScreen(
     onOpen: (String) -> Unit,
     onCall: (TrackedContact, Channel) -> Unit,
     onSettings: () -> Unit,
+    onNotToday: (String) -> Unit = {},
 ) {
     val c = InTouchTheme.colors
     val spacing = InTouchTheme.spacing
@@ -100,6 +101,8 @@ fun DueListScreen(
                     buttonLabel = if (compact) null else stringResource(R.string.add_person),
                     onClick = onAdd,
                 )
+                // Monument has its own home: one person at a time (canvas row A). The cover screen keeps the grid.
+                c.light && !compact -> MonumentHome(overview, onOpen, onCall, onNotToday)
                 else -> {
                     val everyone = overview.overdue + overview.dueSoon + overview.onTrack
                     LazyVerticalGrid(

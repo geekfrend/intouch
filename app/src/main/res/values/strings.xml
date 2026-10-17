@@ -291,4 +291,18 @@
     <string name="theme_drifter_body">Night sky, neon signal</string>
     <string name="theme_monument">Monument</string>
     <string name="theme_monument_body">Warm sand, soft shapes</string>
+    <!-- Monument home (canvas row A) -->
+    <plurals name="monument_to_reach">
+        <item quantity="one">%d person to reach</item>
+        <item quantity="other">%d people to reach</item>
+    </plurals>
+    <string name="monument_all_good">Everyone\'s in touch</string>
+    <string name="monument_up_next">Up next</string>
+    <plurals name="monument_on_track">
+        <item quantity="one">%d person on track</item>
+        <item quantity="other">%d people on track</item>
+    </plurals>
+    <string name="monument_reach">%1$s %2$s</string>
+    <string name="monument_not_today">Not today</string>
+    <string name="monument_usually">usually %1$s</string>
 </resources>

@@ -35,6 +35,7 @@ import com.geekfrend.intouch.work.PromptWork
 import com.geekfrend.intouch.ui.dialogs.LogDraft
 import com.geekfrend.intouch.ui.screens.SettingsState
 import com.geekfrend.intouch.ui.theme.AppTheme
+import com.geekfrend.intouch.widget.WidgetUpdater
 import com.geekfrend.intouch.ui.screens.SetupState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -263,6 +264,7 @@ class InTouchViewModel(application: Application) : AndroidViewModel(application)
 
     fun setTheme(theme: AppTheme) {
         prefs.theme = theme.name
+        viewModelScope.launch { WidgetUpdater.refresh(app) }
     }
 
     fun setupState(): SetupState = SetupState(

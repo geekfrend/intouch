@@ -19,4 +19,17 @@
     <color name="widget_due_soon">#FFC65C</color>
     <color name="widget_button_bg">#43E5D6</color>
     <color name="widget_button_text">#110E24</color>
+
+    <!-- Monument theme widgets (Settings › Theme) -->
+    <color name="mwidget_bg">#F2F4E6D8</color>
+    <color name="mwidget_panel">#FFF8F0</color>
+    <color name="mwidget_border">#E8D4C2</color>
+    <color name="mwidget_border_strong">#D6BFA9</color>
+    <color name="mwidget_text">#3A2C4C</color>
+    <color name="mwidget_muted">#6E5F80</color>
+    <color name="mwidget_signal">#3D7A6C</color>
+    <color name="mwidget_fading">#B84A33</color>
+    <color name="mwidget_soon">#6F5A9E</color>
+    <color name="mwidget_on_signal">#F4E6D8</color>
+    <color name="mwidget_window">#F4E6D8</color>
 </resources>

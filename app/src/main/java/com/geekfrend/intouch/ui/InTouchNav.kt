@@ -221,6 +221,7 @@ private fun DueRoute(
         onOpen = { nav.navigate(Routes.contact(it)) },
         onCall = { c, ch -> vm.startCall(activity, c, ch) },
         onSettings = { nav.navigate(Routes.SETTINGS) },
+        onNotToday = { vm.snooze(it, LocalDate.now().plusDays(1)) },
     )
 }
 
