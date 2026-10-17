@@ -66,6 +66,8 @@ The cover screen layout switches on below 480 dp of screen height (`COMPACT_MAX_
   with card rows that turn pink when overdue and one icon button each. Widgets use the system sans-serif with
   letter spacing, since custom fonts in RemoteViews aren't reliable across launchers.
 
-## Still to design
+## App icon (built in #13)
 
-- The app icon is still a placeholder phone glyph (now cyan on night).
+Canvas row H, option B: two rings reaching in from opposite corners, like hooked fingers (the ASL sign for
+"friend"), with their overlap lit lavender. Pink ring over a cyan ring on night. Vector sources:
+`ic_launcher_foreground.xml`, `ic_launcher_monochrome.xml` (themed icons) and `ic_notification.xml`.
