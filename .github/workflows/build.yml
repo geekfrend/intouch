@@ -33,7 +33,12 @@ jobs:
       - name: Run unit tests and build the APK
         run: |
           chmod +x gradlew
-          ./gradlew testDebugUnitTest assembleDebug --stacktrace
+          set -o pipefail
+          # Compiler and resource errors also become annotations, so they show up without opening the full log.
+          ./gradlew testDebugUnitTest assembleDebug --stacktrace 2>&1 | tee build.log || {
+            grep -E "^e: |error:|ERROR:|What went wrong|FAILED|Exception" build.log | head -40 | while IFS= read -r line; do echo "::error::$line"; done
+            exit 1
+          }
 
       - name: Upload test reports
         if: failure()
