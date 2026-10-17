@@ -200,6 +200,8 @@ private fun DueRoute(
     snackbar: SnackbarHostState,
 ) {
     val overview by vm.overview.collectAsStateWithLifecycle()
+    val settingsVersion by vm.settingsVersion.collectAsStateWithLifecycle()
+    val tileInfo = remember(settingsVersion) { vm.tileInfo() }
     val scope = rememberCoroutineScope()
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickContact()) { uri ->
         if (uri != null) scope.launch { if (vm.readPicked(uri) != null) nav.navigate(Routes.ADD) }
@@ -222,6 +224,7 @@ private fun DueRoute(
         onCall = { c, ch -> vm.startCall(activity, c, ch) },
         onSettings = { nav.navigate(Routes.SETTINGS) },
         onNotToday = { vm.snooze(it, LocalDate.now().plusDays(1)) },
+        tileInfo = tileInfo,
     )
 }
 
@@ -408,6 +411,7 @@ private fun SettingsRoute(vm: InTouchViewModel, nav: NavHostController, activity
         onExport = { exporter.launch("intouch-backup-${LocalDate.now()}.json") },
         onImport = { importer.launch(arrayOf("application/json", "text/plain", "application/octet-stream")) },
         onTheme = vm::setTheme,
+        onTileInfo = vm::setTileInfo,
     )
 
     confirmImport?.let { uri ->

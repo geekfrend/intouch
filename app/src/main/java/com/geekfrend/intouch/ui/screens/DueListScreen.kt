@@ -34,6 +34,7 @@ import com.geekfrend.intouch.R
 import com.geekfrend.intouch.data.Channel
 import com.geekfrend.intouch.data.DueOverview
 import com.geekfrend.intouch.data.TrackedContact
+import com.geekfrend.intouch.ui.TileInfo
 import com.geekfrend.intouch.ui.components.ContactTile
 import com.geekfrend.intouch.ui.components.Counter
 import com.geekfrend.intouch.ui.components.DashedButton
@@ -56,6 +57,7 @@ fun DueListScreen(
     onCall: (TrackedContact, Channel) -> Unit,
     onSettings: () -> Unit,
     onNotToday: (String) -> Unit = {},
+    tileInfo: TileInfo = TileInfo.TALKED,
 ) {
     val c = InTouchTheme.colors
     val spacing = InTouchTheme.spacing
@@ -102,7 +104,7 @@ fun DueListScreen(
                     onClick = onAdd,
                 )
                 // Monument has its own home: one person at a time (canvas row A). The cover screen keeps the grid.
-                c.light && !compact -> MonumentHome(overview, onOpen, onCall, onNotToday)
+                c.light && !compact -> MonumentHome(overview, onOpen, onCall, onNotToday, tileInfo)
                 else -> {
                     val everyone = overview.overdue + overview.dueSoon + overview.onTrack
                     LazyVerticalGrid(
@@ -130,6 +132,7 @@ fun DueListScreen(
                                 compact = compact,
                                 onOpen = { onOpen(item.contact.id) },
                                 onCall = { ch -> onCall(item.contact, ch) },
+                                info = tileInfo,
                             )
                         }
                         if (!compact) {

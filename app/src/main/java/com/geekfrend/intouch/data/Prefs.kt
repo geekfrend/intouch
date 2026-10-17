@@ -29,6 +29,11 @@ class Prefs(context: Context) {
         get() = p.getString("theme", "DRIFTER") ?: "DRIFTER"
         set(v) { p.edit().putString("theme", v).apply(); changed() }
 
+    /** What tiles show under the signal bar: "TALKED" (default), "DUE" or "BOTH". */
+    var tileInfo: String
+        get() = p.getString("tileInfo", "TALKED") ?: "TALKED"
+        set(v) { p.edit().putString("tileInfo", v).apply(); changed() }
+
     var setupDone: Boolean
         get() = p.getBoolean("setupDone", false)
         set(v) { p.edit().putBoolean("setupDone", v).apply(); changed() }

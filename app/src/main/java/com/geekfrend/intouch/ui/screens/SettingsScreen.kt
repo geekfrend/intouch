@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import com.geekfrend.intouch.ui.theme.AppTheme
+import com.geekfrend.intouch.ui.TileInfo
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -62,6 +63,7 @@ data class SettingsState(
     val archived: List<TrackedContact>,
     val version: String,
     val theme: AppTheme = AppTheme.DRIFTER,
+    val tileInfo: TileInfo = TileInfo.TALKED,
 )
 
 val MIN_CALL_OPTIONS = listOf(10, 20, 30, 45, 60)
@@ -83,6 +85,7 @@ fun SettingsScreen(
     onExport: () -> Unit,
     onImport: () -> Unit,
     onTheme: (AppTheme) -> Unit = {},
+    onTileInfo: (TileInfo) -> Unit = {},
 ) {
     val c = InTouchTheme.colors
     Scaffold(containerColor = c.night, snackbarHost = { SnackbarHost(snackbar) }) { padding ->
@@ -100,6 +103,16 @@ fun SettingsScreen(
                         ThemeChoice(AppTheme.DRIFTER, stringResource(R.string.theme_drifter), stringResource(R.string.theme_drifter_body), state.theme, onTheme, Modifier.weight(1f))
                         ThemeChoice(AppTheme.MONUMENT, stringResource(R.string.theme_monument), stringResource(R.string.theme_monument_body), state.theme, onTheme, Modifier.weight(1f))
                     }
+                }
+
+                SettingsCard(stringResource(R.string.settings_tile_title)) {
+                    val choices = listOf(TileInfo.TALKED, TileInfo.DUE, TileInfo.BOTH)
+                    Segmented(
+                        listOf(stringResource(R.string.tile_info_talked), stringResource(R.string.tile_info_due), stringResource(R.string.tile_info_both)),
+                        choices.indexOf(state.tileInfo),
+                        { onTileInfo(choices[it]) },
+                    )
+                    Body(stringResource(R.string.settings_tile_body))
                 }
 
                 SettingsCard(

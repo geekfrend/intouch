@@ -60,6 +60,7 @@ import com.geekfrend.intouch.device.Photos
 import com.geekfrend.intouch.domain.ContactStatus
 import com.geekfrend.intouch.domain.DueState
 import com.geekfrend.intouch.ui.Format
+import com.geekfrend.intouch.ui.TileInfo
 import com.geekfrend.intouch.ui.theme.InTouchTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -391,7 +392,7 @@ fun Counter(value: Int, label: String, color: Color, modifier: Modifier = Modifi
  * channel. Fading people get a glowing magenta outline and a filled button.
  */
 @Composable
-fun ContactTile(item: DueItem, compact: Boolean, onOpen: () -> Unit, onCall: (Channel) -> Unit) {
+fun ContactTile(item: DueItem, compact: Boolean, onOpen: () -> Unit, onCall: (Channel) -> Unit, info: TileInfo = TileInfo.TALKED) {
     val res = LocalContext.current.resources
     val c = InTouchTheme.colors
     val sizes = InTouchTheme.sizes
@@ -400,16 +401,19 @@ fun ContactTile(item: DueItem, compact: Boolean, onOpen: () -> Unit, onCall: (Ch
     val fading = item.status.state == DueState.OVERDUE
     val color = statusColor(item.status.state)
     val level = signalLevel(item.status, contact.frequencyDays)
-    val statusText = if (item.status.state == DueState.ON_TRACK && item.status.snoozedUntil == null && item.status.lastConnectedAt != null) {
-        Format.lastCallShort(res, item.status)
-    } else {
-        Format.due(res, item.status)
+    val onTrack = item.status.state == DueState.ON_TRACK
+    // The first line carries the urgency color; with Both, "Talked …" follows in muted text.
+    val lines = when (info) {
+        TileInfo.TALKED -> listOf(Format.lastCallShort(res, item.status))
+        TileInfo.DUE -> listOf(Format.due(res, item.status))
+        TileInfo.BOTH -> listOf(Format.due(res, item.status), Format.lastCallShort(res, item.status))
     }
+    val extra = if (info == TileInfo.BOTH) 16.dp else 0.dp
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(if (compact) sizes.tileHeightCompact else sizes.tileHeight)
+            .height((if (compact) sizes.tileHeightCompact else sizes.tileHeight) + extra)
             .then(if (fading) Modifier.shadow(14.dp, shape, ambientColor = c.fading, spotColor = c.fading) else Modifier)
             .clip(shape)
             .background(c.panel)
@@ -430,14 +434,19 @@ fun ContactTile(item: DueItem, compact: Boolean, onOpen: () -> Unit, onCall: (Ch
             )
         }
         SignalBar(level, color, Modifier.fillMaxWidth())
-        Text(
-            statusText,
-            style = MaterialTheme.typography.bodySmall,
-            fontWeight = if (item.status.state == DueState.ON_TRACK) FontWeight.Normal else FontWeight.Bold,
-            color = if (item.status.state == DueState.ON_TRACK) c.muted else color,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
+        Column {
+            lines.forEachIndexed { i, line ->
+                val urgent = i == 0 && !onTrack
+                Text(
+                    line,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = if (urgent) FontWeight.Bold else FontWeight.Normal,
+                    color = if (urgent) color else c.muted,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
         Spacer(Modifier.weight(1f))
         val label = Format.channel(res, contact.preferredChannel)
         val buttonHeight = if (compact) 36.dp else 40.dp

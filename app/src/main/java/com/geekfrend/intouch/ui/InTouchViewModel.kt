@@ -258,7 +258,14 @@ class InTouchViewModel(application: Application) : AndroidViewModel(application)
         archived = archived,
         version = versionName(),
         theme = theme(),
+        tileInfo = tileInfo(),
     )
+
+    fun tileInfo(): TileInfo = runCatching { TileInfo.valueOf(prefs.tileInfo) }.getOrDefault(TileInfo.TALKED)
+
+    fun setTileInfo(info: TileInfo) {
+        prefs.tileInfo = info.name
+    }
 
     fun theme(): AppTheme = runCatching { AppTheme.valueOf(prefs.theme) }.getOrDefault(AppTheme.DRIFTER)
 

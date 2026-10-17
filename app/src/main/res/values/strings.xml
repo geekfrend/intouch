@@ -305,4 +305,9 @@
     <string name="monument_reach">%1$s %2$s</string>
     <string name="monument_not_today">Not today</string>
     <string name="monument_usually">usually %1$s</string>
+    <string name="settings_tile_title">On each tile, show</string>
+    <string name="settings_tile_body">When you last talked, when you\'re next due, or both.</string>
+    <string name="tile_info_talked">Last talked</string>
+    <string name="tile_info_due">Due</string>
+    <string name="tile_info_both">Both</string>
 </resources>

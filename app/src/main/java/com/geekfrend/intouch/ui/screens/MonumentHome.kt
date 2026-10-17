@@ -51,6 +51,7 @@ import com.geekfrend.intouch.data.DueOverview
 import com.geekfrend.intouch.data.TrackedContact
 import com.geekfrend.intouch.domain.DueState
 import com.geekfrend.intouch.ui.Format
+import com.geekfrend.intouch.ui.TileInfo
 import com.geekfrend.intouch.ui.components.Avatar
 import com.geekfrend.intouch.ui.components.GhostButton
 import com.geekfrend.intouch.ui.components.Label
@@ -72,6 +73,7 @@ fun MonumentHome(
     onOpen: (String) -> Unit,
     onCall: (TrackedContact, Channel) -> Unit,
     onNotToday: (String) -> Unit,
+    info: TileInfo = TileInfo.TALKED,
 ) {
     val c = InTouchTheme.colors
     val res = LocalContext.current.resources
@@ -106,7 +108,7 @@ fun MonumentHome(
 
         if (upNext.isNotEmpty()) {
             item(key = "upnext") { Label(stringResource(R.string.monument_up_next), Modifier.padding(start = 4.dp, top = 6.dp)) }
-            items(upNext, key = { it.contact.id }) { PersonRow(it, onOpen, onCall) }
+            items(upNext, key = { it.contact.id }) { PersonRow(it, onOpen, onCall, info) }
         }
 
         if (overview.onTrack.isNotEmpty()) {
@@ -134,7 +136,7 @@ fun MonumentHome(
                 }
             }
             if (showOnTrack) {
-                items(overview.onTrack, key = { "t" + it.contact.id }) { PersonRow(it, onOpen, onCall) }
+                items(overview.onTrack, key = { "t" + it.contact.id }) { PersonRow(it, onOpen, onCall, info) }
             }
         }
     }
@@ -190,7 +192,7 @@ private fun HeroCard(
 }
 
 @Composable
-private fun PersonRow(item: DueItem, onOpen: (String) -> Unit, onCall: (TrackedContact, Channel) -> Unit) {
+private fun PersonRow(item: DueItem, onOpen: (String) -> Unit, onCall: (TrackedContact, Channel) -> Unit, info: TileInfo) {
     val c = InTouchTheme.colors
     val res = LocalContext.current.resources
     val contact = item.contact
@@ -208,7 +210,11 @@ private fun PersonRow(item: DueItem, onOpen: (String) -> Unit, onCall: (TrackedC
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(contact.displayName, style = MaterialTheme.typography.titleMedium, color = c.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            val status = if (item.status.state == DueState.ON_TRACK) Format.lastCall(res, item.status) else Format.due(res, item.status)
+            val status = when (info) {
+                TileInfo.TALKED -> Format.lastCallShort(res, item.status)
+                TileInfo.DUE -> Format.due(res, item.status)
+                TileInfo.BOTH -> Format.due(res, item.status) + " · " + Format.lastCallShort(res, item.status).replaceFirstChar { it.lowercase() }
+            }
             Text(
                 status + " · " + stringResource(R.string.monument_usually, Format.channel(res, ch).lowercase()),
                 style = MaterialTheme.typography.bodySmall,
