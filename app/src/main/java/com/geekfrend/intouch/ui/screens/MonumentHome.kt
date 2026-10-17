@@ -251,9 +251,9 @@ private fun Cubes(modifier: Modifier) {
 /** An isometric cube centred on [c] (top face centre) with edge [s]. */
 private fun DrawScope.cube(c: Offset, s: Float, top: Color, left: Color, right: Color) {
     val h = s * 0.58f
-    fun path(vararg p: Offset) = Path().apply { moveTo(p[0].x, p[0].y); p.drop(1).forEach { lineTo(it.x, it.y) }; close() }
+    fun path(vararg xy: Float) = Path().apply { moveTo(xy[0], xy[1]); var i = 2; while (i < xy.size) { lineTo(xy[i], xy[i + 1]); i += 2 }; close() }
     val n = Offset(c.x, c.y - h); val e = Offset(c.x + s, c.y); val so = Offset(c.x, c.y + h); val w = Offset(c.x - s, c.y)
-    drawPath(path(n, e, so, w), top)
-    drawPath(path(w, so, Offset(so.x, so.y + s), Offset(w.x, w.y + s)), left)
-    drawPath(path(so, e, Offset(e.x, e.y + s), Offset(so.x, so.y + s)), right)
+    drawPath(path(n.x, n.y, e.x, e.y, so.x, so.y, w.x, w.y), top)
+    drawPath(path(w.x, w.y, so.x, so.y, so.x, so.y + s, w.x, w.y + s), left)
+    drawPath(path(so.x, so.y, e.x, e.y, e.x, e.y + s, so.x, so.y + s), right)
 }
