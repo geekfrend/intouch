@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Themed-icon (Android 13+) version of the app icon: one color, Android tints it. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group android:name="lens">
+        <clip-path android:pathData="M 30.50,58.5 a 15,15 0 1,0 30,0 a 15,15 0 1,0 -30,0 Z" />
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M 47.50,49.5 a 15,15 0 1,0 30,0 a 15,15 0 1,0 -30,0 Z" />
+    </group>
+    <path
+        android:pathData="M 88.66 44.55 L 73.11 60.11 A 15 15 0 0 1 51.89 38.89 A 15 15 0 0 1 73.11 60.11"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="5.2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <path
+        android:pathData="M 19.34 63.45 L 34.89 47.89 A 15 15 0 0 1 56.11 69.11 A 15 15 0 0 1 34.89 47.89"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="5.2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

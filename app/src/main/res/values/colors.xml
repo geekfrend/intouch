@@ -4,6 +4,8 @@
 <resources>
     <color name="ic_bg">#110E24</color>
     <color name="ic_fg">#43E5D6</color>
+    <color name="ic_reach">#FF5C9E</color>
+    <color name="ic_overlap">#EEE8FF</color>
     <color name="window_bg">#110E24</color>
 
     <color name="widget_bg">#F21B1736</color>
