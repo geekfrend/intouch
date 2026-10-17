@@ -79,8 +79,8 @@ data class Sizes(
     val avatarMedium: Dp = 56.dp,
     val avatarLarge: Dp = 72.dp,
     val listBottomPadding: Dp = 88.dp,
-    val tileHeight: Dp = 196.dp,
-    val tileHeightCompact: Dp = 148.dp,
+    val tileHeight: Dp = 156.dp,
+    val tileHeightCompact: Dp = 122.dp,
     /** Corner radius of tiles and panels. */
     val corner: Dp = 6.dp,
     /** Corner radius of buttons. */
