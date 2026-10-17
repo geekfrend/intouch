@@ -197,6 +197,7 @@ fun SelectTile(
     dashed: Boolean = false,
 ) {
     val c = InTouchTheme.colors
+    val buttonCorner = InTouchTheme.sizes.buttonCorner
     val shape = RoundedCornerShape(InTouchTheme.sizes.buttonCorner)
     val color = if (selected) c.signal else c.text
     Column(
@@ -210,7 +211,7 @@ fun SelectTile(
                         drawRoundRect(
                             color = c.lineStrong,
                             style = Stroke(width = 1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(8f, 6f))),
-                            cornerRadius = CornerRadius(4.dp.toPx()),
+                            cornerRadius = CornerRadius(buttonCorner.toPx()),
                         )
                     }
                 } else {

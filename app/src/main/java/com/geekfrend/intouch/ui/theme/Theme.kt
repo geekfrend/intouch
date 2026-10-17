@@ -103,9 +103,9 @@ data class Sizes(
     val tileHeight: Dp = 156.dp,
     val tileHeightCompact: Dp = 122.dp,
     /** Corner radius of tiles and panels. */
-    val corner: Dp = 6.dp,
+    val corner: Dp = 18.dp,
     /** Corner radius of buttons. */
-    val buttonCorner: Dp = 4.dp,
+    val buttonCorner: Dp = 12.dp,
 )
 
 private val DrifterColors = AppColors(
@@ -169,7 +169,7 @@ private fun scheme(c: AppColors, errorContainer: Color): ColorScheme {
 private val DrifterScheme = scheme(DrifterColors, Color(0xFF3A1530))
 private val MonumentScheme = scheme(MonumentColors, Color(0xFFF7D9CF))
 
-/** Drifter is square-cut; Monument is soft and rounded, with pill buttons. */
+/** Drifter has softly rounded tiles (changed from square-cut on Oct 17); Monument is rounder still, with pill buttons. */
 private val DrifterSizes = Sizes()
 private val MonumentSizes = Sizes(corner = 20.dp, buttonCorner = 22.dp)
 
@@ -222,11 +222,11 @@ private val AppTypography = Typography(
 )
 
 private val DrifterShapes = Shapes(
-    extraSmall = RoundedCornerShape(4.dp),
-    small = RoundedCornerShape(4.dp),
-    medium = RoundedCornerShape(6.dp),
-    large = RoundedCornerShape(8.dp),
-    extraLarge = RoundedCornerShape(12.dp),
+    extraSmall = RoundedCornerShape(8.dp),
+    small = RoundedCornerShape(12.dp),
+    medium = RoundedCornerShape(16.dp),
+    large = RoundedCornerShape(18.dp),
+    extraLarge = RoundedCornerShape(24.dp),
 )
 
 private val MonumentShapes = Shapes(
