@@ -53,6 +53,32 @@ class HomeWidget : DueWidget()
 class CoverWidget : DueWidget()
 
 abstract class DueWidget : AppWidgetProvider() {
+    companion object {
+        const val ACTION_TOGGLE = "com.geekfrend.intouch.widget.TOGGLE_SECTION"
+        const val EXTRA_SECTION = "section"
+    }
+
+    /** A section chip was tapped: open or close that section. No screen is started, so this works folded. */
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action != ACTION_TOGGLE) {
+            super.onReceive(context, intent)
+            return
+        }
+        val section = runCatching { WidgetSection.valueOf(intent.getStringExtra(EXTRA_SECTION) ?: "") }.getOrNull() ?: return
+        val widgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
+        val appContext = context.applicationContext
+        val pending = goAsync()
+        appContext.app.scope.launch {
+            try {
+                val overview = appContext.app.repository.currentOverview()
+                WidgetSections.toggle(appContext, widgetId, section, overview)
+                WidgetUpdater.refresh(appContext, overview)
+            } finally {
+                pending.finish()
+            }
+        }
+    }
+
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         refresh(context)
         SyncWork.runNow(context)
@@ -135,13 +161,53 @@ object WidgetUpdater {
         views.setRemoteAdapter(R.id.widget_list, service)
         views.setEmptyView(R.id.widget_list, R.id.widget_empty)
 
-        // Taps in the list (expand/collapse, open someone, call someone) all go through WidgetActionActivity.
-        val template = Intent(context, WidgetActionActivity::class.java)
-            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_ANIMATION)
+        // Section chips: tap to open or close Fading, Soon and Strong.
+        val open = WidgetSections.open(context, widgetId, overview)
+        val cls = if (cover) CoverWidget::class.java else HomeWidget::class.java
+        listOf(
+            Triple(WidgetSection.FADING, overview.overdue.size, R.id.chip_fading),
+            Triple(WidgetSection.SOON, overview.dueSoon.size, R.id.chip_soon),
+            Triple(WidgetSection.STRONG, overview.onTrack.size, R.id.chip_strong),
+        ).forEachIndexed { i, (section, count, chip) ->
+            if (count == 0) {
+                views.setViewVisibility(chip, android.view.View.GONE)
+                return@forEachIndexed
+            }
+            val isOpen = section in open
+            val name = res.getString(
+                when (section) {
+                    WidgetSection.FADING -> R.string.summary_fading
+                    WidgetSection.SOON -> R.string.summary_soon
+                    WidgetSection.STRONG -> R.string.summary_strong
+                }
+            )
+            val accent = when (section) {
+                WidgetSection.FADING -> t.fading
+                WidgetSection.SOON -> t.soon
+                WidgetSection.STRONG -> t.signal
+            }
+            views.setViewVisibility(chip, android.view.View.VISIBLE)
+            views.setTextViewText(chip, res.getString(R.string.widget_section, name, count) + if (isOpen) "  ▾" else "  ▸")
+            views.setTextColor(chip, color(context, if (isOpen) accent else t.muted))
+            views.setInt(chip, "setBackgroundResource", t.buttonOutline)
+            views.setContentDescription(chip, res.getString(if (isOpen) R.string.widget_collapse else R.string.widget_expand, name))
+            val toggle = Intent(context, cls)
+                .setAction(DueWidget.ACTION_TOGGLE)
+                .putExtra(DueWidget.EXTRA_SECTION, section.name)
+                .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId)
+            views.setOnClickPendingIntent(chip, PendingIntent.getBroadcast(context, widgetId * 20 + 10 + i, toggle, FLAGS))
+        }
+
+        // Taps on people. Each row supplies the whole intent (the dialer, WhatsApp, or InTouch), so a call
+        // goes straight to the phone or WhatsApp, which Samsung allows on the cover screen while folded.
+        var piFlags = PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT or
+            Intent.FILL_IN_ACTION or Intent.FILL_IN_DATA or Intent.FILL_IN_CATEGORIES or
+            Intent.FILL_IN_COMPONENT or Intent.FILL_IN_PACKAGE or Intent.FILL_IN_SELECTOR
+        if (android.os.Build.VERSION.SDK_INT >= 34) piFlags = piFlags or PendingIntent.FLAG_ALLOW_UNSAFE_IMPLICIT_INTENT
         val options = if (cover) ActivityOptions.makeBasic().setLaunchDisplayId(COVER_DISPLAY_ID).toBundle() else null
         views.setPendingIntentTemplate(
             R.id.widget_list,
-            PendingIntent.getActivity(context, widgetId * 20 + 18, template, PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT, options),
+            PendingIntent.getActivity(context, widgetId * 20 + 18, Intent().addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), piFlags, options),
         )
         return views
     }

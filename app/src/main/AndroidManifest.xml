@@ -60,15 +60,6 @@
             android:exported="false"
             android:permission="android.permission.BIND_REMOTEVIEWS" />
 
-        <!-- Handles taps in the widget lists (expand a section, open someone, call them), then closes. -->
-        <activity
-            android:name=".widget.WidgetActionActivity"
-            android:excludeFromRecents="true"
-            android:exported="false"
-            android:noHistory="true"
-            android:taskAffinity=""
-            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-
         <!-- FR-19: home-screen widget. -->
         <receiver
             android:name=".widget.HomeWidget"

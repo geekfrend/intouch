@@ -1,10 +1,8 @@
 package com.geekfrend.intouch.widget
 
-import android.app.Activity
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
-import android.os.Bundle
 import android.widget.RemoteViews
 import android.widget.RemoteViewsService
 import com.geekfrend.intouch.MainActivity
@@ -16,7 +14,6 @@ import com.geekfrend.intouch.device.Photos
 import com.geekfrend.intouch.ui.Format
 import com.geekfrend.intouch.ui.TileInfo
 import com.geekfrend.intouch.ui.components.signalLevel
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 /** The three groups the widget lists, weakest signal first. */
@@ -39,16 +36,10 @@ object WidgetSections {
     }
 }
 
-/** Fills the widget's scrolling list: a header per section, and the people in each open section. */
+/** Fills the widget's scrolling list: a label per open section, then its people. The chips above open and close sections. */
 class WidgetListService : RemoteViewsService() {
     companion object {
         const val EXTRA_COVER = "cover"
-        const val EXTRA_ACTION = "widgetAction"
-        const val EXTRA_SECTION = "section"
-        const val EXTRA_CONTACT = "contactId"
-        const val ACTION_TOGGLE = "toggle"
-        const val ACTION_OPEN = "open"
-        const val ACTION_REACH = "reach"
     }
 
     override fun onGetViewFactory(intent: Intent): RemoteViewsFactory = Factory(
@@ -80,8 +71,10 @@ class WidgetListService : RemoteViewsService() {
                 groups.forEach { (section, people) ->
                     if (people.isEmpty()) return@forEach
                     val isOpen = section in open
-                    add(Row.Header(section, people.size, isOpen))
-                    if (isOpen) people.forEach { add(Row.Person(it, section)) }
+                    if (isOpen) {
+                        add(Row.Header(section, people.size, true))
+                        people.forEach { add(Row.Person(it, section)) }
+                    }
                 }
             }
         }
@@ -120,14 +113,8 @@ class WidgetListService : RemoteViewsService() {
                 setInt(R.id.section_dot, "setBackgroundColor", WidgetUpdater.color(context, accent(row.section, t)))
                 setTextViewText(R.id.section_label, res.getString(R.string.widget_section, name, row.count))
                 setTextColor(R.id.section_label, WidgetUpdater.color(context, t.text))
-                setTextViewText(R.id.section_chevron, if (row.open) "▾" else "▸")
+                setTextViewText(R.id.section_chevron, "")
                 setTextColor(R.id.section_chevron, WidgetUpdater.color(context, t.muted))
-                setContentDescription(R.id.section_root, res.getString(if (row.open) R.string.widget_collapse else R.string.widget_expand, name))
-                setOnClickFillInIntent(
-                    R.id.section_root,
-                    Intent().putExtra(EXTRA_ACTION, ACTION_TOGGLE).putExtra(EXTRA_SECTION, row.section.name)
-                        .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId),
-                )
             }
         }
 
@@ -175,50 +162,15 @@ class WidgetListService : RemoteViewsService() {
                         setInt(seg, "setBackgroundColor", if (k < level) accent else off)
                     }
                 }
-                setOnClickFillInIntent(R.id.button, Intent().putExtra(EXTRA_ACTION, ACTION_REACH).putExtra(EXTRA_CONTACT, contact.id))
-                setOnClickFillInIntent(R.id.row_text, Intent().putExtra(EXTRA_ACTION, ACTION_OPEN).putExtra(EXTRA_CONTACT, contact.id))
-            }
-        }
-    }
-}
-
-/**
- * Receives taps from the widget lists. It has no screen of its own: it expands or collapses a
- * section, opens someone in InTouch, or calls/texts/WhatsApps them, then closes straight away.
- */
-class WidgetActionActivity : Activity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        val app = applicationContext.app
-        when (intent.getStringExtra(WidgetListService.EXTRA_ACTION)) {
-            WidgetListService.ACTION_TOGGLE -> {
-                val section = runCatching { WidgetSection.valueOf(intent.getStringExtra(WidgetListService.EXTRA_SECTION) ?: "") }.getOrNull()
-                val widgetId = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
-                if (section != null) {
-                    app.scope.launch {
-                        val overview = app.repository.currentOverview()
-                        WidgetSections.toggle(applicationContext, widgetId, section, overview)
-                        WidgetUpdater.refresh(applicationContext, overview)
-                    }
-                }
-            }
-            WidgetListService.ACTION_OPEN -> {
-                startActivity(
-                    Intent(this, MainActivity::class.java)
+                // The real intents, filled into the widget's template: straight to the dialer/WhatsApp, or InTouch.
+                setOnClickFillInIntent(R.id.button, WidgetUpdater.reachIntent(context, contact))
+                setOnClickFillInIntent(
+                    R.id.row_text,
+                    Intent(context, MainActivity::class.java)
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                        .putExtra(MainActivity.EXTRA_CONTACT_ID, intent.getStringExtra(WidgetListService.EXTRA_CONTACT)),
+                        .putExtra(MainActivity.EXTRA_CONTACT_ID, contact.id),
                 )
             }
-            WidgetListService.ACTION_REACH -> {
-                val id = intent.getStringExtra(WidgetListService.EXTRA_CONTACT)
-                val contact = runBlocking {
-                    app.repository.currentOverview().let { it.overdue + it.dueSoon + it.onTrack }.firstOrNull { it.contact.id == id }?.contact
-                }
-                if (contact != null) runCatching { startActivity(WidgetUpdater.reachIntent(this, contact)) }
-            }
         }
-        finish()
-        @Suppress("DEPRECATION")
-        overridePendingTransition(0, 0)
     }
 }
