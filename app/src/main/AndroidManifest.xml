@@ -60,6 +60,11 @@
             android:exported="false"
             android:permission="android.permission.BIND_REMOTEVIEWS" />
 
+        <!-- Taps on the cover-screen widget: places phone calls directly so they work folded. -->
+        <receiver
+            android:name=".widget.CoverTapReceiver"
+            android:exported="false" />
+
         <!-- FR-19: home-screen widget. -->
         <receiver
             android:name=".widget.HomeWidget"

@@ -163,13 +163,17 @@ class WidgetListService : RemoteViewsService() {
                     }
                 }
                 // The real intents, filled into the widget's template: straight to the dialer/WhatsApp, or InTouch.
-                setOnClickFillInIntent(R.id.button, WidgetUpdater.reachIntent(context, contact))
-                setOnClickFillInIntent(
-                    R.id.row_text,
-                    Intent(context, MainActivity::class.java)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-                        .putExtra(MainActivity.EXTRA_CONTACT_ID, contact.id),
-                )
+                val openIntent = Intent(context, MainActivity::class.java)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    .putExtra(MainActivity.EXTRA_CONTACT_ID, contact.id)
+                if (cover) {
+                    setOnClickFillInIntent(R.id.button, Intent().putExtra(CoverTapReceiver.EXTRA_REACH, contact.id))
+                    setOnClickFillInIntent(R.id.row_text, Intent().putExtra(CoverTapReceiver.EXTRA_OPEN, contact.id))
+                } else {
+                    // The real intents, filled into the widget's template: straight to the dialer/WhatsApp, or InTouch.
+                    setOnClickFillInIntent(R.id.button, WidgetUpdater.reachIntent(context, contact))
+                    setOnClickFillInIntent(R.id.row_text, openIntent)
+                }
             }
         }
     }

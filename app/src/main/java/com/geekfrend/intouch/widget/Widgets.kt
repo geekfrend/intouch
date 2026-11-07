@@ -198,17 +198,28 @@ object WidgetUpdater {
             views.setOnClickPendingIntent(chip, PendingIntent.getBroadcast(context, widgetId * 20 + 10 + i, toggle, FLAGS))
         }
 
-        // Taps on people. Each row supplies the whole intent (the dialer, WhatsApp, or InTouch), so a call
-        // goes straight to the phone or WhatsApp, which Samsung allows on the cover screen while folded.
-        var piFlags = PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT or
-            Intent.FILL_IN_ACTION or Intent.FILL_IN_DATA or Intent.FILL_IN_CATEGORIES or
-            Intent.FILL_IN_COMPONENT or Intent.FILL_IN_PACKAGE or Intent.FILL_IN_SELECTOR
-        if (android.os.Build.VERSION.SDK_INT >= 34) piFlags = piFlags or PendingIntent.FLAG_ALLOW_UNSAFE_IMPLICIT_INTENT
-        val options = if (cover) ActivityOptions.makeBasic().setLaunchDisplayId(COVER_DISPLAY_ID).toBundle() else null
-        views.setPendingIntentTemplate(
-            R.id.widget_list,
-            PendingIntent.getActivity(context, widgetId * 20 + 18, Intent().addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), piFlags, options),
-        )
+        // Taps on people.
+        if (cover) {
+            // Cover screen: taps go to CoverTapReceiver, which places phone calls itself (no screen of ours
+            // involved), so Samsung's call screen comes up on the cover while the phone stays folded.
+            views.setPendingIntentTemplate(
+                R.id.widget_list,
+                PendingIntent.getBroadcast(
+                    context, widgetId * 20 + 18, Intent(context, CoverTapReceiver::class.java),
+                    PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+                ),
+            )
+        } else {
+            // Home screen: each row supplies the whole intent (the dialer, WhatsApp, or InTouch).
+            var piFlags = PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT or
+                Intent.FILL_IN_ACTION or Intent.FILL_IN_DATA or Intent.FILL_IN_CATEGORIES or
+                Intent.FILL_IN_COMPONENT or Intent.FILL_IN_PACKAGE or Intent.FILL_IN_SELECTOR
+            if (android.os.Build.VERSION.SDK_INT >= 34) piFlags = piFlags or PendingIntent.FLAG_ALLOW_UNSAFE_IMPLICIT_INTENT
+            views.setPendingIntentTemplate(
+                R.id.widget_list,
+                PendingIntent.getActivity(context, widgetId * 20 + 18, Intent().addFlags(Intent.FLAG_ACTIVITY_NEW_TASK), piFlags),
+            )
+        }
         return views
     }
 
